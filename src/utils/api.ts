@@ -1,4 +1,4 @@
-import type { ChatRequest, ChatResponse, APIConfig, Character, GlobalPrompt } from '../types';
+import type { ChatRequest, ChatResponse, APIConfig, Character, GlobalPrompt } from '../types/index';
 
 // API请求基础配置
 const DEFAULT_TIMEOUT = 30000; // 30秒超时

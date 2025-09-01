@@ -4,7 +4,7 @@ import { useCharacterStore } from '../stores/characterStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAppStore } from '../stores/appStore';
 import { sendChatRequest, buildSystemPrompt, formatErrorMessage } from '../utils/api';
-import type { Character } from '../types';
+import type { Character } from '../types/index';
 
 export const useChat = () => {
   const [isSending, setIsSending] = useState(false);

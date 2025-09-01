@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Character } from '../types';
+import type { Character } from '../types/index';
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 
 interface CharacterStore {

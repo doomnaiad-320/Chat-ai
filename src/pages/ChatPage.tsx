@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { useNavigate } from 'react-router-dom';
 import { ChatBubble } from '../components/chat/ChatBubble';
 import { ChatInput } from '../components/chat/ChatInput';
 import { useChat } from '../hooks/useChat';
@@ -18,6 +19,7 @@ export const ChatPage: React.FC = () => {
   
   const { currentCharacter } = useCharacterStore();
   const { setCurrentTab } = useAppStore();
+  const navigate = useNavigate();
   const [parent] = useAutoAnimate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -40,50 +42,91 @@ export const ChatPage: React.FC = () => {
 
   // 返回消息列表
   const handleBack = () => {
-    setCurrentTab('messages');
+    // 使用 navigate(-1) 返回上一页，如果没有历史记录则返回消息页面
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+      setCurrentTab('messages');
+    }
   };
 
   // 如果没有选择角色，显示提示
   if (!currentCharacter) {
     return (
-      <div className="flex flex-col h-full bg-warm-50">
-        <div className="navbar">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-full hover:bg-primary-50 transition-colors"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          <h1 className="text-lg font-semibold text-text-primary">聊天</h1>
-          <div className="w-8"></div>
+      <div className="flex flex-col h-full" style={{ backgroundColor: '#FAFBFF' }}>
+        {/* 导航栏 */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white/60 backdrop-blur-md border-b" style={{ borderColor: '#E8EFFF', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div className="px-6 py-4 flex items-center justify-between">
+            <button
+              onClick={handleBack}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+              style={{ backgroundColor: '#F0F4FF', color: '#6B7280' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E0E4FF'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F0F4FF'}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <h1 className="text-xl font-medium" style={{ color: '#6B7280' }}>聊天</h1>
+            <div className="w-10"></div>
+          </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-4">
+        <div className="flex-1 flex items-center justify-center p-6 pt-20">
           <motion.div
-            className="text-center"
+            className="text-center max-w-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-primary-400">
-                <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" fill="currentColor"/>
-              </svg>
+            {/* 图标容器 */}
+            <div className="relative mb-8">
+              <div
+                className="w-32 h-32 rounded-3xl flex items-center justify-center mx-auto transform hover:rotate-3 transition-transform duration-300"
+                style={{
+                  backgroundColor: '#F0F4FF',
+                  boxShadow: '0 4px 12px rgba(240, 244, 255, 0.4)'
+                }}
+              >
+                <span className="text-5xl">🤖</span>
+              </div>
+              {/* 装饰性元素 */}
+              <div
+                className="absolute -top-3 -right-3 w-8 h-8 rounded-full animate-bounce"
+                style={{ backgroundColor: '#D1E7FE' }}
+              ></div>
+              <div
+                className="absolute -bottom-3 -left-3 w-6 h-6 rounded-full animate-bounce delay-150"
+                style={{ backgroundColor: '#F3D9FF' }}
+              ></div>
             </div>
-            <h3 className="text-lg font-medium text-text-primary mb-2">
-              请先选择一个角色
-            </h3>
-            <p className="text-text-muted mb-6">
-              前往通讯录选择一个角色开始对话
+
+            <h3 className="text-2xl font-medium mb-3" style={{ color: '#6B7280' }}>请先选择一个角色</h3>
+            <p className="mb-8 leading-relaxed" style={{ color: '#9CA3AF' }}>
+              前往通讯录选择一个可爱的AI角色开始对话吧！✨
             </p>
+
             <motion.button
-              className="btn-primary"
+              className="font-medium py-4 px-8 rounded-2xl transform hover:scale-105 transition-all duration-300"
+              style={{
+                backgroundColor: '#D1E7FE',
+                color: '#4A90E2',
+                boxShadow: '0 4px 12px rgba(209, 231, 254, 0.3)'
+              }}
               onClick={() => setCurrentTab('contacts')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#C1D7EE';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(209, 231, 254, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#D1E7FE';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(209, 231, 254, 0.3)';
+              }}
             >
-              选择角色
+              选择角色 🌸
             </motion.button>
           </motion.div>
         </div>
@@ -92,62 +135,81 @@ export const ChatPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-warm-50">
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#FAFBFF' }}>
       {/* 顶部导航栏 */}
-      <div className="navbar">
-        <motion.button
-          onClick={handleBack}
-          className="p-2 rounded-full hover:bg-primary-50 transition-colors"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </motion.button>
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white/60 backdrop-blur-md border-b" style={{ borderColor: '#E8EFFF', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div className="px-6 py-4 flex items-center justify-between">
+          <motion.button
+            onClick={handleBack}
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+            style={{ backgroundColor: '#F0F4FF', color: '#6B7280' }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E0E4FF'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F0F4FF'}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </motion.button>
 
-        {/* 角色信息 */}
-        <div className="flex items-center flex-1 mx-4">
-          <div className="avatar mr-3">
-            {currentCharacter.avatar ? (
-              <img 
-                src={currentCharacter.avatar} 
-                alt={currentCharacter.name}
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
-              <span>{currentCharacter.name.charAt(0)}</span>
-            )}
+          {/* 角色信息 */}
+          <div className="flex items-center space-x-3">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+              style={{
+                backgroundColor: currentCharacter.gender === 'female' ? '#F3D9FF' :
+                                currentCharacter.gender === 'male' ? '#D1E7FE' : '#BAF1E3'
+              }}
+            >
+              {currentCharacter.avatar ? (
+                <img
+                  src={currentCharacter.avatar}
+                  alt={currentCharacter.name}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span style={{
+                  color: currentCharacter.gender === 'female' ? '#8B5CF6' :
+                         currentCharacter.gender === 'male' ? '#4A90E2' : '#10B981'
+                }}>
+                  {currentCharacter.name.charAt(0)}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <h2 className="font-medium" style={{ color: '#6B7280' }}>{currentCharacter.name}</h2>
+              <p className="text-xs flex items-center" style={{ color: isSending ? '#9CA3AF' : '#10B981' }}>
+                <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: isSending ? '#9CA3AF' : '#10B981' }}></span>
+                {isSending ? '正在输入...' : '在线'}
+              </p>
+            </div>
           </div>
-          
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-semibold text-text-primary truncate">
-              {currentCharacter.name}
-            </h1>
-            <p className="text-sm text-text-muted">
-              {isSending ? '正在输入...' : '在线'}
-            </p>
-          </div>
+
+          {/* 更多选项 */}
+          <motion.button
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+            style={{ backgroundColor: '#F0F4FF', color: '#6B7280' }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E0E4FF'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F0F4FF'}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="1" fill="currentColor"/>
+              <circle cx="19" cy="12" r="1" fill="currentColor"/>
+              <circle cx="5" cy="12" r="1" fill="currentColor"/>
+            </svg>
+          </motion.button>
         </div>
-
-        {/* 更多选项 */}
-        <motion.button
-          className="p-2 rounded-full hover:bg-primary-50 transition-colors"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="1" fill="currentColor"/>
-            <circle cx="19" cy="12" r="1" fill="currentColor"/>
-            <circle cx="5" cy="12" r="1" fill="currentColor"/>
-          </svg>
-        </motion.button>
       </div>
 
       {/* 消息列表 */}
-      <div 
-        className="flex-1 overflow-y-auto pt-16 pb-4 px-4 relative"
+      <div
+        className="flex-1 overflow-y-auto pt-20 pb-4 px-6 relative"
         onScroll={handleScroll}
+        ref={parent}
       >
         {messages.length === 0 ? (
           <motion.div
@@ -231,7 +293,12 @@ export const ChatPage: React.FC = () => {
       <AnimatePresence>
         {showScrollButton && (
           <motion.button
-            className="absolute bottom-24 right-4 w-12 h-12 bg-primary-400 text-white rounded-full shadow-glow flex items-center justify-center z-10"
+            className="absolute bottom-24 right-6 w-12 h-12 rounded-full flex items-center justify-center z-10"
+            style={{
+              backgroundColor: '#4A90E2',
+              color: 'white',
+              boxShadow: '0 4px 12px rgba(74, 144, 226, 0.3)'
+            }}
             onClick={scrollToBottom}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -247,7 +314,7 @@ export const ChatPage: React.FC = () => {
       </AnimatePresence>
 
       {/* 输入框 */}
-      <div className="p-4 pb-20">
+      <div className="p-6 pb-24">
         <ChatInput
           onSendMessage={(message) => handleSendMessage(message, currentCharacter)}
           disabled={isSending}

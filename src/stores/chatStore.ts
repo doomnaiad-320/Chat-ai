@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Message, Conversation } from '../types';
-import { get, set } from 'idb-keyval';
+import type { Message, Conversation } from '../types/index';
+import { get as idbGet, set as idbSet } from 'idb-keyval';
+import { aiService } from '../services/aiService';
+import type { ChatMessage } from '../services/aiService';
+import { useAIStore } from './aiStore';
+import { useCharacterStore } from './characterStore';
 
 interface ChatStore {
   conversations: Conversation[];
@@ -48,7 +52,7 @@ export const useChatStore = create<ChatStore>()(
           const updatedConversations = [newConversation, ...currentConversations];
           
           // 保存到IndexedDB
-          await set('conversations', updatedConversations);
+          await idbSet('conversations', updatedConversations);
           
           set({ 
             conversations: updatedConversations,
@@ -89,8 +93,10 @@ export const useChatStore = create<ChatStore>()(
 
       sendMessage: async (content: string, characterId: string) => {
         try {
+          set({ loading: true, error: null });
+
           const messageId = generateId();
-          const newMessage: Message = {
+          const userMessage: Message = {
             id: messageId,
             content,
             sender: 'user',
@@ -100,7 +106,7 @@ export const useChatStore = create<ChatStore>()(
           };
 
           let currentConversation = get().currentConversation;
-          
+
           // 如果没有当前对话，创建一个新的
           if (!currentConversation || currentConversation.characterId !== characterId) {
             const conversationId = await get().createConversation(characterId);
@@ -111,31 +117,155 @@ export const useChatStore = create<ChatStore>()(
             throw new Error('无法创建对话');
           }
 
-          // 更新消息列表
-          const updatedMessages = [...currentConversation.messages, newMessage];
-          const updatedConversation: Conversation = {
+          // 添加用户消息
+          const messagesWithUser = [...currentConversation.messages, userMessage];
+
+          // 更新对话状态（添加用户消息）
+          let updatedConversation: Conversation = {
             ...currentConversation,
-            messages: updatedMessages,
+            messages: messagesWithUser,
             lastMessageAt: new Date()
           };
 
-          // 更新conversations数组
-          const conversations = get().conversations;
-          const updatedConversations = conversations.map(conv =>
+          let conversations = get().conversations;
+          let updatedConversations = conversations.map(conv =>
             conv.id === currentConversation!.id ? updatedConversation : conv
           );
 
-          // 保存到IndexedDB
-          await set('conversations', updatedConversations);
+          // 保存用户消息
+          await idbSet('conversations', updatedConversations);
 
           set({
             conversations: updatedConversations,
             currentConversation: updatedConversation,
-            messages: updatedMessages
+            messages: messagesWithUser
           });
 
+          // 获取 AI 配置和角色信息
+          const aiStore = useAIStore.getState();
+          const characterStore = useCharacterStore.getState();
+          const character = characterStore.characters.find(c => c.id === characterId);
+
+          if (!character) {
+            throw new Error('角色不存在');
+          }
+
+          if (!aiStore.isConfigured) {
+            throw new Error('AI 服务未配置，请先在设置中配置 API 密钥');
+          }
+
+          // 准备 AI 消息历史
+          const chatMessages: ChatMessage[] = messagesWithUser
+            .filter(msg => msg.sender === 'user' || msg.sender === 'ai')
+            .map(msg => ({
+              role: msg.sender === 'user' ? 'user' : 'assistant',
+              content: msg.content,
+              timestamp: msg.timestamp.getTime()
+            }));
+
+          // 创建 AI 响应消息占位符
+          const aiMessageId = generateId();
+          const aiMessage: Message = {
+            id: aiMessageId,
+            content: '',
+            sender: 'ai',
+            characterId,
+            timestamp: new Date(),
+            status: 'sending'
+          };
+
+          // 添加 AI 消息占位符
+          const messagesWithAI = [...messagesWithUser, aiMessage];
+          updatedConversation = {
+            ...updatedConversation,
+            messages: messagesWithAI,
+            lastMessageAt: new Date()
+          };
+
+          updatedConversations = conversations.map(conv =>
+            conv.id === currentConversation!.id ? updatedConversation : conv
+          );
+
+          set({
+            conversations: updatedConversations,
+            currentConversation: updatedConversation,
+            messages: messagesWithAI
+          });
+
+          // 调用 AI 服务（流式响应）
+          let aiContent = '';
+          await aiService.sendMessageStream(
+            chatMessages,
+            character,
+            (chunk: string, isComplete: boolean) => {
+              if (!isComplete) {
+                aiContent += chunk;
+
+                // 更新 AI 消息内容
+                const currentState = get();
+                const currentConv = currentState.currentConversation;
+                if (currentConv) {
+                  const updatedMessages = currentConv.messages.map(msg =>
+                    msg.id === aiMessageId
+                      ? { ...msg, content: aiContent, status: 'sending' as const }
+                      : msg
+                  );
+
+                  const updatedConv = {
+                    ...currentConv,
+                    messages: updatedMessages
+                  };
+
+                  const updatedConvs = currentState.conversations.map(conv =>
+                    conv.id === currentConv.id ? updatedConv : conv
+                  );
+
+                  set({
+                    conversations: updatedConvs,
+                    currentConversation: updatedConv,
+                    messages: updatedMessages
+                  });
+                }
+              } else {
+                // AI 响应完成
+                const currentState = get();
+                const currentConv = currentState.currentConversation;
+                if (currentConv) {
+                  const finalMessages = currentConv.messages.map(msg =>
+                    msg.id === aiMessageId
+                      ? { ...msg, content: aiContent, status: 'sent' as const }
+                      : msg
+                  );
+
+                  const finalConv = {
+                    ...currentConv,
+                    messages: finalMessages,
+                    lastMessageAt: new Date()
+                  };
+
+                  const finalConvs = currentState.conversations.map(conv =>
+                    conv.id === currentConv.id ? finalConv : conv
+                  );
+
+                  // 保存最终状态
+                  idbSet('conversations', finalConvs);
+
+                  set({
+                    conversations: finalConvs,
+                    currentConversation: finalConv,
+                    messages: finalMessages,
+                    loading: false
+                  });
+                }
+              }
+            },
+            aiStore.globalPrompt
+          );
+
         } catch (error) {
-          set({ 
+          console.error('发送消息失败:', error);
+          set({
+            loading: false,
             error: error instanceof Error ? error.message : '发送消息失败'
           });
         }
@@ -206,7 +336,7 @@ export const useChatStore = create<ChatStore>()(
         try {
           set({ loading: true, error: null });
           
-          const savedConversations = await get('conversations') || [];
+          const savedConversations = await idbGet('conversations') || [];
           
           set({ 
             conversations: savedConversations,
@@ -225,7 +355,7 @@ export const useChatStore = create<ChatStore>()(
           const conversations = get().conversations;
           const updatedConversations = conversations.filter(conv => conv.id !== conversationId);
           
-          await set('conversations', updatedConversations);
+          await idbSet('conversations', updatedConversations);
           
           set({ conversations: updatedConversations });
 

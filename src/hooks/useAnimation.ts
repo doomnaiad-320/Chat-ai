@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AnimationType } from '../types';
+import type { AnimationType } from '../types/index';
 
 // 动画配置
 const ANIMATION_CONFIGS = {

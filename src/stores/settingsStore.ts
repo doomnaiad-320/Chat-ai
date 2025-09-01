@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { APIConfig, AppSettings, GlobalPrompt } from '../types';
+import type { APIConfig, AppSettings, GlobalPrompt } from '../types/index';
 import { get, set } from 'idb-keyval';
 
 interface SettingsStore {

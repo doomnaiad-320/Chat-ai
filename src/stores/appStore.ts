@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { TabType } from '../types';
+import type { TabType } from '../types/index';
 
 interface AppStore {
   currentTab: TabType;

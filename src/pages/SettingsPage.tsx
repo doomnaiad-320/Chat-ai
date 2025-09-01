@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAppStore } from '../stores/appStore';
-import type { APIConfig } from '../types';
+import type { APIConfig } from '../types/index';
 import { APIConfigForm } from '../components/settings/APIConfigForm';
+import { AIConfigPanel } from '../components/settings/AIConfigPanel';
 
 interface SettingItemProps {
   title: string;
@@ -294,11 +295,24 @@ export const SettingsPage: React.FC = () => {
           </SettingItem>
         </motion.div>
 
-        {/* API配置 */}
+        {/* AI 配置 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="mt-8"
+        >
+          <h2 className="text-lg font-semibold text-text-primary mb-4">AI 配置</h2>
+          <div className="card">
+            <AIConfigPanel />
+          </div>
+        </motion.div>
+
+        {/* API配置 (旧版本，保留兼容性) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
           className="mt-8"
         >
           <div className="flex items-center justify-between mb-4">
@@ -346,7 +360,7 @@ export const SettingsPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4 }}
           className="mt-8"
         >
           <h2 className="text-lg font-semibold text-text-primary mb-4">数据管理</h2>
@@ -378,7 +392,7 @@ export const SettingsPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           className="mt-8 mb-8"
         >
           <h2 className="text-lg font-semibold text-text-primary mb-4">关于</h2>

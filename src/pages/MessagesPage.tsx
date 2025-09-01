@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../stores/chatStore';
 import { useCharacterStore } from '../stores/characterStore';
+import { useAppStore } from '../stores/appStore';
 import { useScrollAnimation } from '../hooks/useAnimation';
 
 interface ConversationItemProps {
@@ -51,44 +52,74 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
-      <div className="flex items-center p-4 bg-white/60 backdrop-blur-sm rounded-card border border-white/30 shadow-card hover:shadow-glow transition-all duration-200">
+      <div
+        className="flex items-center p-4 rounded-2xl border transition-all duration-200 hover:scale-[1.02] transform"
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          borderColor: '#E8EFFF',
+          boxShadow: '0 2px 8px rgba(232, 239, 255, 0.2)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(232, 239, 255, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(232, 239, 255, 0.2)';
+        }}
+      >
         {/* 头像 */}
         <div className="relative">
-          <div className="avatar">
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-lg"
+            style={{
+              backgroundColor: character.gender === 'female' ? '#F3D9FF' :
+                              character.gender === 'male' ? '#D1E7FE' : '#BAF1E3'
+            }}
+          >
             {character.avatar ? (
-              <img 
-                src={character.avatar} 
+              <img
+                src={character.avatar}
                 alt={character.name}
                 className="w-full h-full object-cover rounded-full"
               />
             ) : (
-              <span>{character.name.charAt(0)}</span>
+              <span style={{
+                color: character.gender === 'female' ? '#8B5CF6' :
+                       character.gender === 'male' ? '#4A90E2' : '#10B981'
+              }}>
+                {character.name.charAt(0)}
+              </span>
             )}
           </div>
-          
+
           {/* 在线状态指示器 */}
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+          <div
+            className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white"
+            style={{ backgroundColor: '#10B981' }}
+          ></div>
         </div>
 
         {/* 对话信息 */}
-        <div className="flex-1 ml-3 min-w-0">
+        <div className="flex-1 ml-4 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="font-medium text-text-primary truncate">
+            <h3 className="font-medium truncate" style={{ color: '#6B7280' }}>
               {character.name}
             </h3>
-            <span className="text-xs text-text-muted flex-shrink-0">
+            <span className="text-xs flex-shrink-0" style={{ color: '#9CA3AF' }}>
               {formatTime(lastMessageTime)}
             </span>
           </div>
-          
+
           <div className="flex items-center justify-between">
-            <p className="text-sm text-text-secondary truncate flex-1">
+            <p className="text-sm truncate flex-1" style={{ color: '#9CA3AF' }}>
               {lastMessage}
             </p>
-            
+
             {unreadCount > 0 && (
               <motion.div
-                className="ml-2 bg-danger-400 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1"
+                className="ml-2 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1"
+                style={{ backgroundColor: '#EF4444' }}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -106,6 +137,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 export const MessagesPage: React.FC = () => {
   const { conversations, loadConversations, setCurrentConversation } = useChatStore();
   const { characters, loadCharacters, setCurrentCharacter } = useCharacterStore();
+  const { setCurrentTab } = useAppStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -126,30 +158,40 @@ export const MessagesPage: React.FC = () => {
   };
 
   const handleNewChat = () => {
-    navigate('/chat');
+    // 跳转到通讯录页面选择角色
+    setCurrentTab('contacts');
   };
 
   return (
-    <div className="flex flex-col h-full bg-warm-50">
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#FAFBFF' }}>
       {/* 顶部导航栏 */}
-      <div className="navbar">
-        <h1 className="text-lg font-semibold text-text-primary">信息</h1>
-        
-        <motion.button
-          className="p-2 rounded-full bg-primary-400 text-white shadow-bubble"
-          onClick={handleNewChat}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </motion.button>
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white/60 backdrop-blur-md border-b" style={{ borderColor: '#E8EFFF', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div className="px-6 py-4 flex items-center justify-between">
+          <h1 className="text-xl font-medium" style={{ color: '#6B7280' }}>
+            信息
+          </h1>
+
+          <motion.button
+            className="w-12 h-12 rounded-2xl transform hover:scale-105 hover:rotate-90 transition-all duration-300 flex items-center justify-center group"
+            style={{
+              backgroundColor: '#D1E7FE',
+              color: '#4A90E2',
+              boxShadow: '0 2px 8px rgba(209, 231, 254, 0.3)'
+            }}
+            onClick={handleNewChat}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#C1D7EE'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#D1E7FE'}
+          >
+            <span className="text-xl font-medium group-hover:scale-110 transition-transform duration-200">+</span>
+          </motion.button>
+        </div>
       </div>
 
       {/* 对话列表 */}
-      <div className="flex-1 overflow-y-auto pt-16 pb-20 px-4">
+      <div className="flex-1 overflow-y-auto pt-20 pb-24 px-6">
         {conversations.length === 0 ? (
           <motion.div
             className="flex flex-col items-center justify-center h-full text-center"
@@ -157,30 +199,57 @@ export const MessagesPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-primary-400">
-                <path 
-                  d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" 
-                  fill="currentColor"
-                />
-              </svg>
+            {/* 图标容器 */}
+            <div className="relative mb-8">
+              <div
+                className="w-32 h-32 rounded-3xl flex items-center justify-center mx-auto transform hover:rotate-3 transition-transform duration-300"
+                style={{
+                  backgroundColor: '#F0F4FF',
+                  boxShadow: '0 4px 12px rgba(240, 244, 255, 0.4)'
+                }}
+              >
+                <span className="text-5xl">💬</span>
+              </div>
+              {/* 装饰性元素 */}
+              <div
+                className="absolute -top-3 -right-3 w-8 h-8 rounded-full animate-bounce"
+                style={{ backgroundColor: '#D1E7FE' }}
+              ></div>
+              <div
+                className="absolute -bottom-3 -left-3 w-6 h-6 rounded-full animate-bounce delay-150"
+                style={{ backgroundColor: '#F3D9FF' }}
+              ></div>
+              <div
+                className="absolute top-1/2 -right-6 w-4 h-4 rounded-full animate-pulse"
+                style={{ backgroundColor: '#BAF1E3' }}
+              ></div>
             </div>
-            
-            <h3 className="text-lg font-medium text-text-primary mb-2">
-              还没有对话
-            </h3>
-            
-            <p className="text-text-muted mb-6 max-w-xs">
-              选择一个角色开始你的第一次AI对话吧！
+
+            <h3 className="text-2xl font-medium mb-3" style={{ color: '#6B7280' }}>还没有对话</h3>
+            <p className="mb-8 leading-relaxed" style={{ color: '#9CA3AF' }}>
+              选择一个可爱的AI角色，开始你们的温馨对话吧！✨
             </p>
-            
+
             <motion.button
-              className="btn-primary"
+              className="font-medium py-4 px-8 rounded-2xl transform hover:scale-105 transition-all duration-300"
+              style={{
+                backgroundColor: '#D1E7FE',
+                color: '#4A90E2',
+                boxShadow: '0 4px 12px rgba(209, 231, 254, 0.3)'
+              }}
               onClick={handleNewChat}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#C1D7EE';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(209, 231, 254, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#D1E7FE';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(209, 231, 254, 0.3)';
+              }}
             >
-              开始新对话
+              开始新对话 🌸
             </motion.button>
           </motion.div>
         ) : (

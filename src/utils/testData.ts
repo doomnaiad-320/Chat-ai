@@ -1,4 +1,4 @@
-import type { Character, APIConfig } from '../types';
+import type { Character, APIConfig } from '../types/index';
 
 // 测试角色数据
 export const testCharacters: Omit<Character, 'id' | 'createdAt' | 'updatedAt'>[] = [

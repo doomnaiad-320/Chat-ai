@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../stores/characterStore';
 import { useAppStore } from '../stores/appStore';
-import type { Character } from '../types';
+import type { Character } from '../types/index';
 import { useStaggeredAnimation } from '../hooks/useAnimation';
 import { CharacterForm } from '../components/character/CharacterForm';
 
@@ -22,7 +22,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   onChat,
   animationProps
 }) => {
-  const [showActions, setShowActions] = useState(false);
+  const [showEditButton, setShowEditButton] = useState(false);
 
   const getVoiceStyleText = (style: string) => {
     const styleMap = {
@@ -44,205 +44,163 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     return genderMap[gender as keyof typeof genderMap] || gender;
   };
 
+  const handleCardClick = () => {
+    onChat(character);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击
+    onEdit(character);
+  };
+
   return (
     <motion.div
-      className="relative overflow-hidden rounded-3xl p-6 transition-all duration-300"
+      className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 cursor-pointer"
       style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.6)',
-        backdropFilter: 'blur(12px)',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
         border: '1px solid rgba(232, 239, 255, 0.5)',
-        boxShadow: '0 4px 12px rgba(209, 231, 254, 0.15)',
+        boxShadow: '0 2px 8px rgba(232, 239, 255, 0.2)',
         ...animationProps.style
       }}
       whileHover={{
-        y: -4,
         scale: 1.02,
-        boxShadow: '0 8px 24px rgba(209, 231, 254, 0.25)'
+        boxShadow: '0 4px 12px rgba(232, 239, 255, 0.3)'
       }}
       whileTap={{ scale: 0.98 }}
-      onHoverStart={() => setShowActions(true)}
-      onHoverEnd={() => setShowActions(false)}
+      onClick={handleCardClick}
+      onHoverStart={() => setShowEditButton(true)}
+      onHoverEnd={() => setShowEditButton(false)}
     >
-      {/* 背景渐变 */}
-      <div
-        className="absolute inset-0 opacity-30 rounded-3xl"
-        style={{
-          background: 'linear-gradient(135deg, #F0F4FF 0%, #F8F0FF 50%, #F0FDF9 100%)'
-        }}
-      ></div>
-
-      <div className="relative z-10">
-        {/* 头像和基本信息 */}
-        <div className="flex items-center mb-4">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-medium mr-4"
-            style={{
-              backgroundColor: '#F0F4FF',
-              color: '#6B7280',
-              boxShadow: '0 4px 12px rgba(240, 244, 255, 0.4)'
-            }}
-          >
-            {character.avatar ? (
-              <img
-                src={character.avatar}
-                alt={character.name}
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
-              <span>{character.name.charAt(0)}</span>
-            )}
-          </div>
-
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold mb-1" style={{ color: '#6B7280' }}>
-              {character.name}
-            </h3>
-            <div className="flex items-center space-x-2 text-sm" style={{ color: '#9CA3AF' }}>
-              <span>{getGenderText(character.gender)}</span>
-              <span>•</span>
-              <span>{getVoiceStyleText(character.voiceStyle)}</span>
-            </div>
-          </div>
+      <div className="flex items-center">
+        {/* 头像 */}
+        <div
+          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-medium mr-3 flex-shrink-0"
+          style={{
+            backgroundColor: character.gender === 'female' ? '#F3D9FF' :
+                            character.gender === 'male' ? '#D1E7FE' : '#BAF1E3'
+          }}
+        >
+          {character.avatar ? (
+            <img
+              src={character.avatar}
+              alt={character.name}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <span style={{
+              color: character.gender === 'female' ? '#8B5CF6' :
+                     character.gender === 'male' ? '#4A90E2' : '#10B981'
+            }}>
+              {character.name.charAt(0)}
+            </span>
+          )}
         </div>
 
-        {/* 背景信息 */}
-        {character.background && (
-          <p className="text-sm mb-3 line-clamp-2" style={{ color: '#9CA3AF' }}>
-            {character.background}
+        {/* 信息区域 */}
+        <div className="flex-1 min-w-0">
+          {/* 第一行：昵称 */}
+          <h3 className="font-medium truncate mb-1" style={{ color: '#6B7280' }}>
+            {character.name}
+          </h3>
+
+          {/* 第二行：背景信息 */}
+          <p className="text-sm truncate" style={{ color: '#9CA3AF' }}>
+            {character.background || `${getGenderText(character.gender)} • ${getVoiceStyleText(character.voiceStyle)}`}
           </p>
-        )}
+        </div>
 
-        {/* 喜好标签 */}
-        {character.likes.length > 0 && (
-          <div className="mb-3">
-            <p className="text-xs mb-2 font-medium" style={{ color: '#9CA3AF' }}>💚 喜欢</p>
-            <div className="flex flex-wrap gap-1">
-              {character.likes.slice(0, 3).map((like, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: '#BAF1E3',
-                    color: '#10B981'
-                  }}
-                >
-                  {like}
-                </span>
-              ))}
-              {character.likes.length > 3 && (
-                <span
-                  className="px-2 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: '#F8FAFF',
-                    color: '#9CA3AF'
-                  }}
-                >
-                  +{character.likes.length - 3}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 厌恶标签 */}
-        {character.dislikes.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs mb-2 font-medium" style={{ color: '#9CA3AF' }}>💔 讨厌</p>
-            <div className="flex flex-wrap gap-1">
-              {character.dislikes.slice(0, 3).map((dislike, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: '#FED7D7',
-                    color: '#E53E3E'
-                  }}
-                >
-                  {dislike}
-                </span>
-              ))}
-              {character.dislikes.length > 3 && (
-                <span
-                  className="px-2 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: '#F8FAFF',
-                    color: '#9CA3AF'
-                  }}
-                >
-                  +{character.dislikes.length - 3}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 操作按钮 */}
+        {/* 编辑按钮 */}
         <AnimatePresence>
-          {showActions && (
-            <motion.div
-              className="flex space-x-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
+          {showEditButton && (
+            <motion.button
+              className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
+              style={{
+                backgroundColor: '#F3D9FF',
+                color: '#8B5CF6'
+              }}
+              onClick={handleEditClick}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.2 }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E3C9EF'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F3D9FF'}
             >
-              <motion.button
-                className="flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-200"
-                style={{
-                  backgroundColor: '#D1E7FE',
-                  color: '#4A90E2',
-                  boxShadow: '0 2px 8px rgba(209, 231, 254, 0.3)'
-                }}
-                onClick={() => onChat(character)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#C1D7EE'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#D1E7FE'}
-              >
-                💬 聊天
-              </motion.button>
-              
-              <motion.button
-                className="py-2 px-3 rounded-xl text-sm font-medium border-2 transition-all duration-200"
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                  borderColor: '#F3D9FF',
-                  color: '#8B5CF6'
-                }}
-                onClick={() => onEdit(character)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F3D9FF';
-                  e.currentTarget.style.borderColor = '#E3C9EF';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-                  e.currentTarget.style.borderColor = '#F3D9FF';
-                }}
-              >
-                ✏️ 编辑
-              </motion.button>
-
-              <motion.button
-                className="py-2 px-3 rounded-xl text-sm font-medium transition-all duration-200"
-                style={{
-                  backgroundColor: '#FED7D7',
-                  color: '#E53E3E',
-                  boxShadow: '0 2px 8px rgba(254, 215, 215, 0.3)'
-                }}
-                onClick={() => onDelete(character)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEC7C7'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FED7D7'}
-              >
-                🗑️ 删除
-              </motion.button>
-            </motion.div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </motion.button>
           )}
         </AnimatePresence>
       </div>
+
+      {/* 注释：喜好和厌恶标签（暂时隐藏，后续功能会用到） */}
+      {/*
+      {character.likes.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs mb-2 font-medium" style={{ color: '#9CA3AF' }}>💚 喜欢</p>
+          <div className="flex flex-wrap gap-1">
+            {character.likes.slice(0, 3).map((like, index) => (
+              <span
+                key={index}
+                className="px-2 py-1 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: '#BAF1E3',
+                  color: '#10B981'
+                }}
+              >
+                {like}
+              </span>
+            ))}
+            {character.likes.length > 3 && (
+              <span
+                className="px-2 py-1 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: '#F8FAFF',
+                  color: '#9CA3AF'
+                }}
+              >
+                +{character.likes.length - 3}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {character.dislikes.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs mb-2 font-medium" style={{ color: '#9CA3AF' }}>💔 讨厌</p>
+          <div className="flex flex-wrap gap-1">
+            {character.dislikes.slice(0, 3).map((dislike, index) => (
+              <span
+                key={index}
+                className="px-2 py-1 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: '#FED7D7',
+                  color: '#E53E3E'
+                }}
+              >
+                {dislike}
+              </span>
+            ))}
+            {character.dislikes.length > 3 && (
+              <span
+                className="px-2 py-1 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: '#F8FAFF',
+                  color: '#9CA3AF'
+                }}
+              >
+                +{character.dislikes.length - 3}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+      */}
     </motion.div>
   );
 };
@@ -418,7 +376,7 @@ export const ContactsPage: React.FC = () => {
             </div>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-3">
             {safeCharacters.map((character, index) => (
               <CharacterCard
                 key={character.id}
