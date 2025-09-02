@@ -7,18 +7,20 @@ import { ChatInput } from '../components/chat/ChatInput';
 import { useChat } from '../hooks/useChat';
 import { useCharacterStore } from '../stores/characterStore';
 import { useAppStore } from '../stores/appStore';
+import { useChatStore } from '../stores/chatStore';
 
 export const ChatPage: React.FC = () => {
-  const { 
-    messages, 
-    currentConversation, 
-    isSending, 
-    handleSendMessage, 
-    cancelSending 
+  const {
+    messages,
+    currentConversation,
+    isSending,
+    handleSendMessage,
+    cancelSending
   } = useChat();
   
   const { currentCharacter } = useCharacterStore();
   const { setCurrentTab } = useAppStore();
+  const { loadConversations, conversations, setCurrentConversation } = useChatStore();
   const navigate = useNavigate();
   const [parent] = useAutoAnimate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -32,6 +34,25 @@ export const ChatPage: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // 页面加载时初始化数据
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  // 当角色改变时，加载对应的对话
+  useEffect(() => {
+    if (currentCharacter && conversations.length > 0) {
+      // 查找当前角色的最新对话
+      const characterConversation = conversations.find(
+        conv => conv.characterId === currentCharacter.id
+      );
+      
+      if (characterConversation && characterConversation.id !== currentConversation?.id) {
+        setCurrentConversation(characterConversation.id);
+      }
+    }
+  }, [currentCharacter, conversations, currentConversation, setCurrentConversation]);
 
   // 监听滚动，显示/隐藏滚动到底部按钮
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
