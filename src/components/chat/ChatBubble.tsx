@@ -71,45 +71,61 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
       animate={isVisible ? "visible" : "hidden"}
       variants={bubbleVariants}
     >
-      <div className={`flex max-w-[80%] ${isUser ? 'flex-row items-center' : 'flex-row items-start'}`}>
-        {/* AI头像 */}
-        {isAI && (
-          <motion.div
-            className="avatar mr-2 flex-shrink-0 mt-1"
-            whileHover="wiggle"
-            variants={wiggleVariants}
-          >
-            <span>🤖</span>
-          </motion.div>
-        )}
+      <div className={`flex max-w-[80%] items-start ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+        {/* 头像 - 独立在气泡外部 */}
+        <motion.div
+          className={`
+            flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-lg
+            ${isUser
+              ? 'ml-2 bg-gradient-to-br from-orange-100 to-orange-200'
+              : 'mr-2 bg-gradient-to-br from-blue-100 to-blue-200'
+            }
+            shadow-sm
+          `}
+          whileHover="wiggle"
+          variants={wiggleVariants}
+        >
+          <span>{isUser ? '👤' : '🤖'}</span>
+        </motion.div>
 
-        {/* 消息气泡 */}
-        <div className="flex flex-col">
+        {/* 气泡和时间戳容器 */}
+        <div className="flex flex-col flex-1">
+          {/* 对话气泡 */}
           <motion.div
-            className={`chat-bubble ${
-              isUser ? 'chat-bubble-user' : 'chat-bubble-ai'
-            } relative ${isAI ? 'min-h-[5rem] pb-6' : ''} ${animationClass}`}
+            className={`
+              relative rounded-2xl shadow-lg px-3 py-2
+              ${isUser
+                ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-white'
+                : 'bg-white text-gray-800 border border-gray-100'
+              }
+              ${animationClass}
+            `}
+            style={{
+              borderRadius: isUser ? '18px 18px 6px 18px' : '18px 18px 18px 6px'
+            }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             {/* 气泡尾巴 */}
             <div
-              className={`absolute top-4 w-0 h-0 ${
-                isUser
-                  ? 'right-[-8px] border-l-[8px] border-l-primary-400 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent'
-                  : 'left-[-8px] border-r-[8px] border-r-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent'
-              }`}
+              className={`
+                absolute w-0 h-0 top-3
+                ${isUser
+                  ? 'right-[-6px] border-l-[12px] border-l-orange-500 border-t-[6px] border-t-transparent'
+                  : 'left-[-6px] border-r-[12px] border-r-white border-t-[6px] border-t-transparent'
+                }
+              `}
             />
 
             {/* 消息内容 */}
-            <div className="relative z-10">
-              <span>{message.content}</span>
+            <div>
+              <span className="text-sm leading-snug">{message.content}</span>
             </div>
           </motion.div>
 
           {/* 时间戳 */}
           <motion.div
-            className={`text-xs text-text-muted mt-1 ${
+            className={`text-xs text-text-muted mt-1 px-2 ${
               isUser ? 'text-right' : 'text-left'
             }`}
             initial={{ opacity: 0 }}
@@ -119,17 +135,6 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
             {formatTime(message.timestamp)}
           </motion.div>
         </div>
-
-        {/* 用户头像 */}
-        {isUser && (
-          <motion.div
-            className="avatar ml-2 flex-shrink-0"
-            whileHover="wiggle"
-            variants={wiggleVariants}
-          >
-            <span>👤</span>
-          </motion.div>
-        )}
       </div>
     </motion.div>
   );
