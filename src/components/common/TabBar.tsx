@@ -95,85 +95,87 @@ export const TabBar: React.FC = () => {
   };
 
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-50"
-      style={{
-        background: 'rgba(255, 255, 255, 0.5)',
-        backdropFilter: 'blur(12px)',
-        borderTop: '1px solid rgba(232, 239, 255, 0.3)',
-        boxShadow: '0 -2px 12px rgba(209, 231, 254, 0.1)'
-      }}
-    >
-      <div className="px-6 py-3 flex items-center justify-around">
-        {tabs.map((tab, index) => {
-          const isActive = currentTab === tab.id;
-          const IconComponent = tab.icon;
-          const tabColors = getTabColors(index);
+    <div className="fixed bottom-6 left-4 right-4 z-50">
+      <div
+        className="rounded-3xl mx-auto max-w-sm"
+        style={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(232, 239, 255, 0.5)',
+          boxShadow: '0 8px 32px rgba(209, 231, 254, 0.3), 0 2px 8px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <div className="px-4 py-3 flex items-center justify-around">
+          {tabs.map((tab, index) => {
+            const isActive = currentTab === tab.id;
+            const IconComponent = tab.icon;
+            const tabColors = getTabColors(index);
 
-          return (
-            <motion.button
-              key={tab.id}
-              className="relative flex flex-col items-center p-3 rounded-2xl transition-all duration-300"
-              onClick={() => handleTabClick(tab.id)}
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: isActive ? 1.1 : 1.05 }}
-              animate={{
-                scale: isActive ? 1.1 : 1,
-                y: isActive ? -4 : 0
-              }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              {/* 活跃状态背景 */}
-              {isActive && (
-                <motion.div
-                  className="absolute inset-0 rounded-2xl opacity-60"
-                  style={{ backgroundColor: tabColors.activeBg }}
-                  layoutId="activeTab"
-                  initial={false}
-                  transition={{
-                    type: "spring",
-                    stiffness: 500,
-                    damping: 30
+            return (
+              <motion.button
+                key={tab.id}
+                className="relative flex flex-col items-center p-3 rounded-2xl transition-all duration-300"
+                onClick={() => handleTabClick(tab.id)}
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: isActive ? 1.1 : 1.05 }}
+                animate={{
+                  scale: isActive ? 1.1 : 1,
+                  y: isActive ? -4 : 0
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                {/* 活跃状态背景 */}
+                {isActive && (
+                  <motion.div
+                    className="absolute inset-0 rounded-2xl opacity-60"
+                    style={{ backgroundColor: tabColors.activeBg }}
+                    layoutId="activeTab"
+                    initial={false}
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30
+                    }}
+                  />
+                )}
+
+                {/* 图标容器 */}
+                <div
+                  className="relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center mb-1 transition-all duration-300"
+                  style={{
+                    backgroundColor: isActive ? tabColors.bg : '#F8FAFF',
+                    color: isActive ? tabColors.color : '#9CA3AF',
+                    boxShadow: isActive ? `0 4px 12px ${tabColors.bg}40` : '0 2px 6px rgba(248, 250, 255, 0.3)'
                   }}
-                />
-              )}
+                >
+                  <IconComponent active={isActive} />
+                </div>
 
-              {/* 图标容器 */}
-              <div
-                className="relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center mb-1 transition-all duration-300"
-                style={{
-                  backgroundColor: isActive ? tabColors.bg : '#F8FAFF',
-                  color: isActive ? tabColors.color : '#9CA3AF',
-                  boxShadow: isActive ? `0 4px 12px ${tabColors.bg}40` : '0 2px 6px rgba(248, 250, 255, 0.3)'
-                }}
-              >
-                <IconComponent active={isActive} />
-              </div>
+                {/* 标签文字 */}
+                <span
+                  className="relative z-10 text-xs font-medium transition-all duration-300"
+                  style={{
+                    color: isActive ? '#6B7280' : '#9CA3AF',
+                    transform: isActive ? 'scale(1.05)' : 'scale(1)'
+                  }}
+                >
+                  {tab.label}
+                </span>
 
-              {/* 标签文字 */}
-              <span
-                className="relative z-10 text-xs font-medium transition-all duration-300"
-                style={{
-                  color: isActive ? '#6B7280' : '#9CA3AF',
-                  transform: isActive ? 'scale(1.05)' : 'scale(1)'
-                }}
-              >
-                {tab.label}
-              </span>
-
-              {/* 活跃指示器 */}
-              {isActive && (
-                <motion.div
-                  className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 rounded-full animate-pulse"
-                  style={{ backgroundColor: tabColors.bg }}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.1 }}
-                />
-              )}
-            </motion.button>
-          );
-        })}
+                {/* 活跃指示器 */}
+                {isActive && (
+                  <motion.div
+                    className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 rounded-full animate-pulse"
+                    style={{ backgroundColor: tabColors.bg }}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1 }}
+                  />
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

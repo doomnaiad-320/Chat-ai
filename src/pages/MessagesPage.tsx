@@ -191,7 +191,7 @@ export const MessagesPage: React.FC = () => {
       </div>
 
       {/* 对话列表 */}
-      <div className="flex-1 overflow-y-auto pt-20 pb-24 px-6">
+      <div className="flex-1 overflow-y-auto pt-20 pb-32 px-6">
         {conversations.length === 0 ? (
           <motion.div
             className="flex flex-col items-center justify-center h-full text-center"

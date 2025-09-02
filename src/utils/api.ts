@@ -128,6 +128,56 @@ export const testAPIConnection = async (apiConfig: Partial<APIConfig>): Promise<
   }
 };
 
+// 获取可用模型列表
+export const fetchAvailableModels = async (apiConfig: { baseURL: string; apiKey: string }): Promise<string[]> => {
+  try {
+    const response = await fetch(`${apiConfig.baseURL}/models`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiConfig.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      signal: AbortSignal.timeout(10000), // 10秒超时
+    });
+
+    if (!response.ok) {
+      throw new Error(`获取模型列表失败: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.data && Array.isArray(data.data)) {
+      // 过滤出聊天模型，排除嵌入模型等
+      const chatModels = data.data
+        .filter((model: any) => {
+          const id = model.id || '';
+          return !id.includes('embedding') &&
+                 !id.includes('whisper') &&
+                 !id.includes('tts') &&
+                 !id.includes('dall-e');
+        })
+        .map((model: any) => model.id)
+        .sort();
+      
+      return chatModels.length > 0 ? chatModels : ['gpt-3.5-turbo', 'gpt-4'];
+    }
+    
+    // 如果API不支持模型列表，返回默认模型
+    return ['gpt-3.5-turbo', 'gpt-4'];
+  } catch (error) {
+    console.warn('获取模型列表失败，使用默认模型:', error);
+    // 返回常见的默认模型列表
+    return [
+      'gpt-3.5-turbo',
+      'gpt-4',
+      'gpt-4-turbo',
+      'claude-3-sonnet',
+      'claude-3-opus',
+      'claude-3-haiku'
+    ];
+  }
+};
+
 // 格式化错误消息
 export const formatErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {

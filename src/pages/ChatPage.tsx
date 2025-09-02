@@ -314,7 +314,7 @@ export const ChatPage: React.FC = () => {
       </AnimatePresence>
 
       {/* 输入框 */}
-      <div className="p-6 pb-24">
+      <div className="p-6 pb-32">
         <ChatInput
           onSendMessage={(message) => handleSendMessage(message, currentCharacter)}
           disabled={isSending}

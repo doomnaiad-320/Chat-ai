@@ -4,6 +4,8 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { useAppStore } from '../stores/appStore';
 import type { APIConfig } from '../types/index';
 import { APIConfigForm } from '../components/settings/APIConfigForm';
+import { APIConfigModal } from '../components/settings/APIConfigModal';
+import { APIConfigCard } from '../components/settings/APIConfigCard';
 import { AIConfigPanel } from '../components/settings/AIConfigPanel';
 
 interface SettingItemProps {
@@ -144,7 +146,16 @@ export const SettingsPage: React.FC = () => {
 
   const { showNotification } = useAppStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<APIConfig | undefined>(undefined);
+
+  // 确保 appSettings 有默认值，防止 undefined 错误
+  const safeAppSettings = appSettings || {
+    theme: 'light' as const,
+    language: 'zh-CN' as const,
+    enableAnimations: true,
+    enableSounds: true,
+  };
 
   useEffect(() => {
     loadSettings();
@@ -156,17 +167,17 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleAnimationToggle = () => {
-    updateAppSettings({ enableAnimations: !appSettings.enableAnimations });
+    updateAppSettings({ enableAnimations: !safeAppSettings.enableAnimations });
     showNotification(
-      `动画效果已${!appSettings.enableAnimations ? '开启' : '关闭'}`, 
+      `动画效果已${!safeAppSettings.enableAnimations ? '开启' : '关闭'}`,
       'success'
     );
   };
 
   const handleSoundToggle = () => {
-    updateAppSettings({ enableSounds: !appSettings.enableSounds });
+    updateAppSettings({ enableSounds: !safeAppSettings.enableSounds });
     showNotification(
-      `声音效果已${!appSettings.enableSounds ? '开启' : '关闭'}`, 
+      `声音效果已${!safeAppSettings.enableSounds ? '开启' : '关闭'}`,
       'success'
     );
   };
@@ -178,7 +189,7 @@ export const SettingsPage: React.FC = () => {
 
   const handleAPIConfigEdit = (config: APIConfig) => {
     setEditingConfig(config);
-    setIsFormOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleAPIConfigDelete = async (config: APIConfig) => {
@@ -206,7 +217,7 @@ export const SettingsPage: React.FC = () => {
 
   const handleAddAPIConfig = () => {
     setEditingConfig(undefined);
-    setIsFormOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleFormClose = () => {
@@ -214,8 +225,18 @@ export const SettingsPage: React.FC = () => {
     setEditingConfig(undefined);
   };
 
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setEditingConfig(undefined);
+  };
+
   const handleConfigSave = (config: APIConfig) => {
     // 配置保存后的回调，可以在这里做一些额外处理
+    loadSettings(); // 重新加载配置列表
+  };
+
+  const handleModalSave = () => {
+    // 模态框保存后的回调
     loadSettings(); // 重新加载配置列表
   };
 
@@ -237,7 +258,7 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* 设置内容 */}
-      <div className="flex-1 overflow-y-auto pt-16 pb-20 px-4">
+      <div className="flex-1 overflow-y-auto pt-16 pb-32 px-4">
         {/* 应用设置 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -247,8 +268,8 @@ export const SettingsPage: React.FC = () => {
           <h2 className="text-lg font-semibold text-text-primary mb-4">应用设置</h2>
           
           <SettingItem title="主题模式" description="选择应用的外观主题">
-            <select 
-              value={appSettings.theme}
+            <select
+              value={safeAppSettings.theme}
               onChange={(e) => handleThemeChange(e.target.value as any)}
               className="input-field w-32"
             >
@@ -261,7 +282,7 @@ export const SettingsPage: React.FC = () => {
           <SettingItem title="动画效果" description="开启或关闭界面动画">
             <motion.button
               className={`w-12 h-6 rounded-full transition-colors duration-200 ${
-                appSettings.enableAnimations ? 'bg-primary-400' : 'bg-gray-300'
+                safeAppSettings.enableAnimations ? 'bg-primary-400' : 'bg-gray-300'
               }`}
               onClick={handleAnimationToggle}
               whileTap={{ scale: 0.95 }}
@@ -269,7 +290,7 @@ export const SettingsPage: React.FC = () => {
               <motion.div
                 className="w-5 h-5 bg-white rounded-full shadow-sm"
                 animate={{
-                  x: appSettings.enableAnimations ? 24 : 2
+                  x: safeAppSettings.enableAnimations ? 24 : 2
                 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
@@ -279,7 +300,7 @@ export const SettingsPage: React.FC = () => {
           <SettingItem title="声音效果" description="开启或关闭提示音">
             <motion.button
               className={`w-12 h-6 rounded-full transition-colors duration-200 ${
-                appSettings.enableSounds ? 'bg-primary-400' : 'bg-gray-300'
+                safeAppSettings.enableSounds ? 'bg-primary-400' : 'bg-gray-300'
               }`}
               onClick={handleSoundToggle}
               whileTap={{ scale: 0.95 }}
@@ -287,7 +308,7 @@ export const SettingsPage: React.FC = () => {
               <motion.div
                 className="w-5 h-5 bg-white rounded-full shadow-sm"
                 animate={{
-                  x: appSettings.enableSounds ? 24 : 2
+                  x: safeAppSettings.enableSounds ? 24 : 2
                 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
@@ -303,6 +324,11 @@ export const SettingsPage: React.FC = () => {
           className="mt-8"
         >
           <h2 className="text-lg font-semibold text-text-primary mb-4">AI 配置</h2>
+          
+          {/* API配置展示卡片 */}
+          <APIConfigCard className="mb-4" />
+          
+          {/* AI配置面板 */}
           <div className="card">
             <AIConfigPanel />
           </div>
@@ -407,12 +433,20 @@ export const SettingsPage: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* API配置表单 */}
+      {/* API配置表单 (保留兼容性) */}
       <APIConfigForm
         config={editingConfig}
         isOpen={isFormOpen}
         onClose={handleFormClose}
         onSave={handleConfigSave}
+      />
+
+      {/* 新的API配置模态框 */}
+      <APIConfigModal
+        config={editingConfig}
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSave={handleModalSave}
       />
     </div>
   );

@@ -171,16 +171,19 @@ export const AIConfigPanel: React.FC = () => {
           {/* Base URL */}
           <div>
             <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-              Base URL
+              API 端点 (Base URL) *
             </label>
             <input
               type="text"
               value={formData.baseURL}
               onChange={(e) => setFormData(prev => ({ ...prev, baseURL: e.target.value }))}
-              placeholder="https://api.openai.com/v1"
+              placeholder="https://api.openai.com/v1 或 https://your-api.com/v1"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:outline-none"
               style={{ backgroundColor: 'white' }}
             />
+            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+              支持 OpenAI 兼容的 API 端点，请求格式: /v1/chat/completions
+            </p>
           </div>
 
           {/* 模型选择 */}
