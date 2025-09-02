@@ -29,9 +29,17 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 
   if (!character) return null;
 
-  const formatTime = (date: Date) => {
+  const formatTime = (date: Date | string | number) => {
+    // 确保date是一个有效的Date对象
+    const dateObj = date instanceof Date ? date : new Date(date);
+    
+    // 检查日期是否有效
+    if (isNaN(dateObj.getTime())) {
+      return '未知时间';
+    }
+    
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - dateObj.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -40,12 +48,12 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     if (minutes < 60) return `${minutes}分钟前`;
     if (hours < 24) return `${hours}小时前`;
     if (days < 7) return `${days}天前`;
-    return date.toLocaleDateString();
+    return dateObj.toLocaleDateString();
   };
 
   return (
     <motion.div
-      ref={ref}
+      ref={ref as any}
       className={`${animationClass} cursor-pointer`}
       onClick={onClick}
       whileHover={{ scale: 1.02 }}

@@ -3,13 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
+  onCancelSending?: () => void;
   disabled?: boolean;
+  isSending?: boolean;
   placeholder?: string;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
+  onCancelSending,
   disabled = false,
+  isSending = false,
   placeholder = "输入消息..."
 }) => {
   const [message, setMessage] = useState('');
@@ -25,16 +29,22 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, [message]);
 
-  // 处理发送消息
+  // 处理发送消息或取消发送
   const handleSend = () => {
-    const trimmedMessage = message.trim();
-    if (trimmedMessage && !disabled) {
-      onSendMessage(trimmedMessage);
-      setMessage('');
-      
-      // 重置文本框高度
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+    if (isSending && onCancelSending) {
+      // 如果正在发送，则取消发送
+      onCancelSending();
+    } else {
+      // 否则发送消息
+      const trimmedMessage = message.trim();
+      if (trimmedMessage && !disabled) {
+        onSendMessage(trimmedMessage);
+        setMessage('');
+        
+        // 重置文本框高度
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
       }
     }
   };
@@ -43,30 +53,43 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      // 只有在不是发送状态时才允许键盘发送
+      if (!isSending) {
+        handleSend();
+      }
     }
   };
 
-  // 发送按钮动画变体
+  // 发送/停止按钮动画变体
   const sendButtonVariants = {
-    idle: { 
-      scale: 1, 
+    idle: {
+      scale: 1,
       backgroundColor: '#FF9E80',
-      transition: { type: "spring", stiffness: 400, damping: 17 }
+      transition: { type: "spring" as const, stiffness: 400, damping: 17 }
     },
-    hover: { 
+    hover: {
       scale: 1.1,
       backgroundColor: '#FF8A65',
-      transition: { type: "spring", stiffness: 400, damping: 17 }
+      transition: { type: "spring" as const, stiffness: 400, damping: 17 }
     },
-    tap: { 
+    tap: {
       scale: 0.9,
-      transition: { type: "spring", stiffness: 400, damping: 17 }
+      transition: { type: "spring" as const, stiffness: 400, damping: 17 }
     },
     disabled: {
       scale: 1,
       backgroundColor: '#E0E0E0',
-      transition: { type: "spring", stiffness: 400, damping: 17 }
+      transition: { type: "spring" as const, stiffness: 400, damping: 17 }
+    },
+    stop: {
+      scale: 1,
+      backgroundColor: '#FF5722',
+      transition: { type: "spring" as const, stiffness: 400, damping: 17 }
+    },
+    stopHover: {
+      scale: 1.1,
+      backgroundColor: '#E64A19',
+      transition: { type: "spring" as const, stiffness: 400, damping: 17 }
     }
   };
 
@@ -79,7 +102,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       transition: {
         duration: 0.6,
         times: [0, 0.3, 1],
-        ease: "easeOut"
+        ease: "easeOut" as const
       }
     }
   };
@@ -95,6 +118,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const canSend = message.trim().length > 0 && !disabled;
+  const showStopButton = isSending;
 
   return (
     <div className="relative">
@@ -161,19 +185,47 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             )}
           </div>
 
-          {/* 发送按钮 */}
+          {/* 发送/停止按钮 */}
           <motion.button
             onClick={handleSendWithAnimation}
-            disabled={!canSend}
+            disabled={!canSend && !showStopButton}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-bubble"
             variants={sendButtonVariants}
             initial="idle"
-            animate={disabled ? "disabled" : canSend ? "idle" : "disabled"}
-            whileHover={canSend ? "hover" : undefined}
-            whileTap={canSend ? "tap" : undefined}
+            animate={
+              showStopButton ? "stop" :
+              disabled ? "disabled" :
+              canSend ? "idle" : "disabled"
+            }
+            whileHover={
+              showStopButton ? "stopHover" :
+              canSend ? "hover" : undefined
+            }
+            whileTap={canSend || showStopButton ? "tap" : undefined}
           >
             <AnimatePresence mode="wait">
-              {disabled ? (
+              {showStopButton ? (
+                <motion.svg
+                  key="stop"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  initial={{ scale: 0, rotate: 90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: -90 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <rect
+                    x="6"
+                    y="6"
+                    width="12"
+                    height="12"
+                    fill="currentColor"
+                    rx="2"
+                  />
+                </motion.svg>
+              ) : disabled ? (
                 <motion.div
                   key="loading"
                   initial={{ scale: 0, rotate: 0 }}

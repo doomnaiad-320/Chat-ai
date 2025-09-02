@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { useNavigate } from 'react-router-dom';
 import { ChatBubble } from '../components/chat/ChatBubble';
 import { ChatInput } from '../components/chat/ChatInput';
@@ -22,7 +21,7 @@ export const ChatPage: React.FC = () => {
   const { setCurrentTab } = useAppStore();
   const { loadConversations, conversations, setCurrentConversation } = useChatStore();
   const navigate = useNavigate();
-  const [parent] = useAutoAnimate();
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
@@ -156,7 +155,7 @@ export const ChatPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: '#FAFBFF' }}>
+    <div className="flex flex-col h-screen overflow-hidden" style={{ backgroundColor: '#FAFBFF' }}>
       {/* 顶部导航栏 */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-white/60 backdrop-blur-md border-b" style={{ borderColor: '#E8EFFF', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         <div className="px-6 py-4 flex items-center justify-between">
@@ -228,9 +227,15 @@ export const ChatPage: React.FC = () => {
 
       {/* 消息列表 */}
       <div
-        className="flex-1 overflow-y-auto pt-20 pb-4 px-6 relative"
+        className="flex-1 overflow-y-auto px-6 relative"
+        style={{
+          paddingTop: '80px', // 为顶部导航栏留空间
+          paddingBottom: '120px', // 为底部输入框留空间
+          WebkitOverflowScrolling: 'touch', // iOS 平滑滚动
+          scrollBehavior: 'smooth'
+        }}
         onScroll={handleScroll}
-        ref={parent}
+        ref={messagesContainerRef}
       >
         {messages.length === 0 ? (
           <motion.div
@@ -252,13 +257,13 @@ export const ChatPage: React.FC = () => {
             </p>
           </motion.div>
         ) : (
-          <div ref={parent} className="space-y-2">
+          <div className="space-y-2 min-h-full">
             {messages.map((message, index) => (
               <ChatBubble
                 key={message.id}
                 message={message}
                 isLatest={index === messages.length - 1}
-                delay={index * 100}
+                delay={0}
               />
             ))}
             
@@ -266,16 +271,17 @@ export const ChatPage: React.FC = () => {
             <AnimatePresence>
               {isSending && (
                 <motion.div
-                  className="flex justify-start mb-4"
+                  className="flex justify-start mb-8"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
+                  style={{ marginBottom: '2rem' }} // 确保有足够的底部边距
                 >
                   <div className="flex items-end">
                     <div className="avatar mr-2">
                       {currentCharacter.avatar ? (
-                        <img 
-                          src={currentCharacter.avatar} 
+                        <img
+                          src={currentCharacter.avatar}
                           alt={currentCharacter.name}
                           className="w-full h-full object-cover rounded-full"
                         />
@@ -314,7 +320,7 @@ export const ChatPage: React.FC = () => {
       <AnimatePresence>
         {showScrollButton && (
           <motion.button
-            className="absolute bottom-24 right-6 w-12 h-12 rounded-full flex items-center justify-center z-10"
+            className="fixed bottom-32 right-6 w-12 h-12 rounded-full flex items-center justify-center z-40"
             style={{
               backgroundColor: '#4A90E2',
               color: 'white',
@@ -334,34 +340,17 @@ export const ChatPage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* 输入框 */}
-      <div className="p-6 pb-32">
-        <ChatInput
-          onSendMessage={(message) => handleSendMessage(message, currentCharacter)}
-          disabled={isSending}
-          placeholder={`向 ${currentCharacter.name} 发送消息...`}
-        />
-        
-        {/* 取消发送按钮 */}
-        <AnimatePresence>
-          {isSending && (
-            <motion.div
-              className="flex justify-center mt-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-            >
-              <motion.button
-                onClick={cancelSending}
-                className="text-sm text-text-muted hover:text-primary-400 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                取消发送
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* 固定在底部的输入框 */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/80 backdrop-blur-md border-t" style={{ borderColor: '#E8EFFF', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="p-4">
+          <ChatInput
+            onSendMessage={(message) => handleSendMessage(message, currentCharacter)}
+            onCancelSending={cancelSending}
+            disabled={false}
+            isSending={isSending}
+            placeholder={`向 ${currentCharacter.name} 发送消息...`}
+          />
+        </div>
       </div>
     </div>
   );

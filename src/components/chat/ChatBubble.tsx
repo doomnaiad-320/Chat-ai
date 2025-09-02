@@ -71,7 +71,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
       animate={isVisible ? "visible" : "hidden"}
       variants={bubbleVariants}
     >
-      <div className={`flex max-w-[80%] ${isUser ? 'flex-row-reverse items-end' : 'flex-row items-start'}`}>
+      <div className={`flex max-w-[80%] ${isUser ? 'flex-row items-center' : 'flex-row items-start'}`}>
         {/* AI头像 */}
         {isAI && (
           <motion.div
@@ -84,16 +84,13 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         )}
 
         {/* 消息气泡 */}
-        <motion.div
-          className={`relative ${animationClass}`}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          {/* 气泡主体 */}
-          <div
+        <div className="flex flex-col">
+          <motion.div
             className={`chat-bubble ${
               isUser ? 'chat-bubble-user' : 'chat-bubble-ai'
-            } relative ${isAI ? 'min-h-[5rem] pb-6' : ''}`}
+            } relative ${isAI ? 'min-h-[5rem] pb-6' : ''} ${animationClass}`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             {/* 气泡尾巴 */}
             <div
@@ -108,7 +105,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
             <div className="relative z-10">
               <span>{message.content}</span>
             </div>
-          </div>
+          </motion.div>
 
           {/* 时间戳 */}
           <motion.div
@@ -121,7 +118,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           >
             {formatTime(message.timestamp)}
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* 用户头像 */}
         {isUser && (

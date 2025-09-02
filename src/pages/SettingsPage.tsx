@@ -353,7 +353,7 @@ export const SettingsPage: React.FC = () => {
             </motion.button>
           </div>
 
-          {apiConfigs.length === 0 ? (
+          {!apiConfigs || apiConfigs.length === 0 ? (
             <div className="card text-center py-8">
               <p className="text-text-muted mb-4">还没有API配置</p>
               <motion.button
@@ -367,7 +367,7 @@ export const SettingsPage: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {apiConfigs.map((config) => (
+              {apiConfigs?.map((config) => (
                 <APIConfigItem
                   key={config.id}
                   config={config}
@@ -377,7 +377,7 @@ export const SettingsPage: React.FC = () => {
                   onDelete={() => handleAPIConfigDelete(config)}
                   onTest={() => handleAPIConfigTest(config)}
                 />
-              ))}
+              )) || []}
             </div>
           )}
         </motion.div>

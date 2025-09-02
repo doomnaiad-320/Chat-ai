@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { APIConfig, AppSettings, GlobalPrompt } from '../types/index';
-import { get, set } from 'idb-keyval';
+import { get as idbGet, set as idbSet } from 'idb-keyval';
 
 interface SettingsStore {
   apiConfigs: APIConfig[];
@@ -75,7 +75,7 @@ export const useSettingsStore = create<SettingsStore>()(
             }));
             const finalConfigs = [...updatedConfigs, newConfig];
             
-            await set('apiConfigs', finalConfigs);
+            await idbSet('apiConfigs', finalConfigs);
             
             set({ 
               apiConfigs: finalConfigs,
@@ -84,7 +84,7 @@ export const useSettingsStore = create<SettingsStore>()(
             });
           } else {
             const updatedConfigs = [...currentConfigs, newConfig];
-            await set('apiConfigs', updatedConfigs);
+            await idbSet('apiConfigs', updatedConfigs);
             
             set({ 
               apiConfigs: updatedConfigs,
@@ -117,7 +117,7 @@ export const useSettingsStore = create<SettingsStore>()(
             );
           }
           
-          await set('apiConfigs', updatedConfigs);
+          await idbSet('apiConfigs', updatedConfigs);
           
           set({ 
             apiConfigs: updatedConfigs,
@@ -152,7 +152,7 @@ export const useSettingsStore = create<SettingsStore>()(
             updatedConfigs[0].isDefault = true;
           }
           
-          await set('apiConfigs', updatedConfigs);
+          await idbSet('apiConfigs', updatedConfigs);
           
           set({ 
             apiConfigs: updatedConfigs,
@@ -234,7 +234,7 @@ export const useSettingsStore = create<SettingsStore>()(
           const currentPrompts = get().globalPrompts;
           const updatedPrompts = [...currentPrompts, newPrompt];
           
-          await set('globalPrompts', updatedPrompts);
+          await idbSet('globalPrompts', updatedPrompts);
           
           set({ globalPrompts: updatedPrompts });
         } catch (error) {
@@ -253,7 +253,7 @@ export const useSettingsStore = create<SettingsStore>()(
               : prompt
           );
           
-          await set('globalPrompts', updatedPrompts);
+          await idbSet('globalPrompts', updatedPrompts);
           
           set({ globalPrompts: updatedPrompts });
 
@@ -276,7 +276,7 @@ export const useSettingsStore = create<SettingsStore>()(
           const currentPrompts = get().globalPrompts;
           const updatedPrompts = currentPrompts.filter(prompt => prompt.id !== id);
           
-          await set('globalPrompts', updatedPrompts);
+          await idbSet('globalPrompts', updatedPrompts);
           
           set({ globalPrompts: updatedPrompts });
 
@@ -301,24 +301,24 @@ export const useSettingsStore = create<SettingsStore>()(
           set({ loading: true, error: null });
           
           const [savedAPIConfigs, savedGlobalPrompts] = await Promise.all([
-            get('apiConfigs') || [],
-            get('globalPrompts') || []
+            idbGet('apiConfigs').then(result => result || []),
+            idbGet('globalPrompts').then(result => result || [])
           ]);
           
-          const defaultConfig = savedAPIConfigs.find((config: APIConfig) => config.isDefault) || savedAPIConfigs[0] || null;
-          const activePrompt = savedGlobalPrompts.find((prompt: GlobalPrompt) => prompt.isActive) || null;
+          const defaultConfig = (savedAPIConfigs as APIConfig[]).find((config: APIConfig) => config.isDefault) || (savedAPIConfigs as APIConfig[])[0] || null;
+          const activePrompt = (savedGlobalPrompts as GlobalPrompt[]).find((prompt: GlobalPrompt) => prompt.isActive) || null;
           
-          set({ 
-            apiConfigs: savedAPIConfigs,
+          set({
+            apiConfigs: savedAPIConfigs as APIConfig[],
             currentAPIConfig: defaultConfig,
-            globalPrompts: savedGlobalPrompts,
+            globalPrompts: savedGlobalPrompts as GlobalPrompt[],
             activeGlobalPrompt: activePrompt,
-            loading: false 
+            loading: false
           });
         } catch (error) {
-          set({ 
+          set({
             error: error instanceof Error ? error.message : '加载设置失败',
-            loading: false 
+            loading: false
           });
         }
       },
