@@ -18,7 +18,6 @@ import { useAppStore } from './stores/appStore';
 import { useCharacterStore } from './stores/characterStore';
 import { useChatStore } from './stores/chatStore';
 import { useSettingsStore } from './stores/settingsStore';
-import { useAIStore } from './stores/aiStore';
 
 
 
@@ -126,7 +125,6 @@ const App: React.FC = () => {
   const { loadCharacters } = useCharacterStore();
   const { loadConversations } = useChatStore();
   const { loadSettings } = useSettingsStore();
-  const { initialize } = useAIStore();
 
   // 应用初始化
   useEffect(() => {
@@ -138,16 +136,13 @@ const App: React.FC = () => {
           loadConversations(),
           loadSettings(),
         ]);
-
-        // 初始化 AI 服务
-        initialize();
       } catch (error) {
         console.error('应用初始化失败:', error);
       }
     };
 
     initializeApp();
-  }, [loadCharacters, loadConversations, loadSettings, initialize]);
+  }, [loadCharacters, loadConversations, loadSettings]);
 
   // 页面切换动画配置
   const pageVariants = {

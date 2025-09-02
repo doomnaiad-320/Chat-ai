@@ -2,9 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Message, Conversation } from '../types/index';
 import { get as idbGet, set as idbSet } from 'idb-keyval';
-import { aiService } from '../services/aiService';
-import type { ChatMessage } from '../services/aiService';
-import { useAIStore } from './aiStore';
+import { sendChatRequest, buildSystemPrompt, formatErrorMessage } from '../utils/api';
+import { useSettingsStore } from './settingsStore';
 import { useCharacterStore } from './characterStore';
 
 interface ChatStore {
@@ -141,8 +140,8 @@ export const useChatStore = create<ChatStore>()(
             messages: messagesWithUser
           });
 
-          // 获取 AI 配置和角色信息
-          const aiStore = useAIStore.getState();
+          // 获取配置和角色信息
+          const settingsStore = useSettingsStore.getState();
           const characterStore = useCharacterStore.getState();
           const character = characterStore.characters.find(c => c.id === characterId);
 
@@ -150,31 +149,46 @@ export const useChatStore = create<ChatStore>()(
             throw new Error('角色不存在');
           }
 
-          if (!aiStore.isConfigured) {
+          if (!settingsStore.currentAPIConfig) {
             throw new Error('AI 服务未配置，请先在设置中配置 API 密钥');
           }
 
           // 准备 AI 消息历史
-          const chatMessages: ChatMessage[] = messagesWithUser
+          const chatMessages = messagesWithUser
             .filter(msg => msg.sender === 'user' || msg.sender === 'ai')
             .map(msg => ({
-              role: msg.sender === 'user' ? 'user' : 'assistant',
-              content: msg.content,
-              timestamp: msg.timestamp.getTime()
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: msg.content
             }));
 
-          // 创建 AI 响应消息占位符
+          // 构建系统提示词
+          const systemPrompt = buildSystemPrompt(character, settingsStore.activeGlobalPrompt || undefined);
+          
+          // 构建完整的API消息
+          const apiMessages = [
+            { role: 'system' as const, content: systemPrompt },
+            ...chatMessages.slice(-10), // 只取最近10条消息
+            { role: 'user' as const, content }
+          ];
+
+          // 发送API请求
+          const aiResponse = await sendChatRequest(
+            apiMessages,
+            settingsStore.currentAPIConfig
+          );
+
+          // 创建 AI 响应消息
           const aiMessageId = generateId();
           const aiMessage: Message = {
             id: aiMessageId,
-            content: '',
+            content: aiResponse,
             sender: 'ai',
             characterId,
             timestamp: new Date(),
-            status: 'sending'
+            status: 'sent'
           };
 
-          // 添加 AI 消息占位符
+          // 添加 AI 消息
           const messagesWithAI = [...messagesWithUser, aiMessage];
           updatedConversation = {
             ...updatedConversation,
@@ -186,81 +200,15 @@ export const useChatStore = create<ChatStore>()(
             conv.id === currentConversation!.id ? updatedConversation : conv
           );
 
+          // 保存到IndexedDB
+          await idbSet('conversations', updatedConversations);
+
           set({
             conversations: updatedConversations,
             currentConversation: updatedConversation,
-            messages: messagesWithAI
+            messages: messagesWithAI,
+            loading: false
           });
-
-          // 调用 AI 服务（流式响应）
-          let aiContent = '';
-          await aiService.sendMessageStream(
-            chatMessages,
-            character,
-            (chunk: string, isComplete: boolean) => {
-              if (!isComplete) {
-                aiContent += chunk;
-
-                // 更新 AI 消息内容
-                const currentState = get();
-                const currentConv = currentState.currentConversation;
-                if (currentConv) {
-                  const updatedMessages = currentConv.messages.map(msg =>
-                    msg.id === aiMessageId
-                      ? { ...msg, content: aiContent, status: 'sending' as const }
-                      : msg
-                  );
-
-                  const updatedConv = {
-                    ...currentConv,
-                    messages: updatedMessages
-                  };
-
-                  const updatedConvs = currentState.conversations.map(conv =>
-                    conv.id === currentConv.id ? updatedConv : conv
-                  );
-
-                  set({
-                    conversations: updatedConvs,
-                    currentConversation: updatedConv,
-                    messages: updatedMessages
-                  });
-                }
-              } else {
-                // AI 响应完成
-                const currentState = get();
-                const currentConv = currentState.currentConversation;
-                if (currentConv) {
-                  const finalMessages = currentConv.messages.map(msg =>
-                    msg.id === aiMessageId
-                      ? { ...msg, content: aiContent, status: 'sent' as const }
-                      : msg
-                  );
-
-                  const finalConv = {
-                    ...currentConv,
-                    messages: finalMessages,
-                    lastMessageAt: new Date()
-                  };
-
-                  const finalConvs = currentState.conversations.map(conv =>
-                    conv.id === currentConv.id ? finalConv : conv
-                  );
-
-                  // 保存最终状态
-                  idbSet('conversations', finalConvs);
-
-                  set({
-                    conversations: finalConvs,
-                    currentConversation: finalConv,
-                    messages: finalMessages,
-                    loading: false
-                  });
-                }
-              }
-            },
-            aiStore.globalPrompt
-          );
 
         } catch (error) {
           console.error('发送消息失败:', error);
@@ -298,7 +246,7 @@ export const useChatStore = create<ChatStore>()(
         );
 
         // 异步保存到IndexedDB
-        set('conversations', updatedConversations).catch(console.error);
+        idbSet('conversations', updatedConversations).catch(console.error);
 
         set({
           conversations: updatedConversations,
