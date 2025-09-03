@@ -14,12 +14,14 @@ export const ChatPage: React.FC = () => {
     currentConversation,
     isSending,
     handleSendMessage,
-    cancelSending
+    cancelSending,
+    isDisplayingSequence,
+    typingCharacter
   } = useChat();
   
   const { currentCharacter } = useCharacterStore();
   const { setCurrentTab } = useAppStore();
-  const { loadConversations, conversations, setCurrentConversation } = useChatStore();
+  const { loadConversations, conversations, setCurrentConversation, clearCurrentConversation } = useChatStore();
   const navigate = useNavigate();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -39,16 +41,25 @@ export const ChatPage: React.FC = () => {
     loadConversations();
   }, [loadConversations]);
 
-  // 当角色改变时，加载对应的对话
+  // 当角色改变时，处理对话逻辑
   useEffect(() => {
-    if (currentCharacter && conversations.length > 0) {
+    if (currentCharacter && conversations.length >= 0) {
       // 查找当前角色的最新对话
       const characterConversation = conversations.find(
         conv => conv.characterId === currentCharacter.id
       );
-      
-      if (characterConversation && characterConversation.id !== currentConversation?.id) {
-        setCurrentConversation(characterConversation.id);
+
+      if (characterConversation) {
+        // 如果找到现有对话，切换到该对话
+        if (characterConversation.id !== currentConversation?.id) {
+          setCurrentConversation(characterConversation.id);
+        }
+      } else {
+        // 如果没有找到对话，清空当前对话状态，等待用户发送第一条消息时创建新对话
+        if (currentConversation?.characterId !== currentCharacter.id) {
+          // 只有当前对话不属于当前角色时才清空
+          clearCurrentConversation();
+        }
       }
     }
   }, [currentCharacter, conversations, currentConversation, setCurrentConversation]);
@@ -202,7 +213,7 @@ export const ChatPage: React.FC = () => {
               <h2 className="font-medium" style={{ color: '#6B7280' }}>{currentCharacter.name}</h2>
               <p className="text-xs flex items-center" style={{ color: isSending ? '#9CA3AF' : '#10B981' }}>
                 <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: isSending ? '#9CA3AF' : '#10B981' }}></span>
-                {isSending ? '正在输入...' : '在线'}
+                {isSending ? (typingCharacter ? `${typingCharacter} 正在输入...` : '正在输入...') : '在线'}
               </p>
             </div>
           </div>
@@ -269,7 +280,7 @@ export const ChatPage: React.FC = () => {
             
             {/* 正在发送指示器 */}
             <AnimatePresence>
-              {isSending && (
+              {(isSending || isDisplayingSequence) && (
                 <motion.div
                   className="flex justify-start mb-8"
                   initial={{ opacity: 0, y: 20 }}

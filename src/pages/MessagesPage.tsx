@@ -179,6 +179,8 @@ export const MessagesPage: React.FC = () => {
             信息
           </h1>
 
+          {/* 新建聊天按钮 - 已注释 */}
+          {/*
           <motion.button
             className="w-12 h-12 rounded-2xl transform hover:scale-105 hover:rotate-90 transition-all duration-300 flex items-center justify-center group"
             style={{
@@ -195,6 +197,7 @@ export const MessagesPage: React.FC = () => {
           >
             <span className="text-xl font-medium group-hover:scale-110 transition-transform duration-200">+</span>
           </motion.button>
+          */}
         </div>
       </div>
 

@@ -4,23 +4,32 @@ import { useCharacterStore } from '../stores/characterStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAppStore } from '../stores/appStore';
 import { sendChatRequest, buildSystemPrompt, formatErrorMessage } from '../utils/api';
+import { useAIResponseSplitter } from './useAIResponseSplitter';
 import type { Character } from '../types/index';
 
 export const useChat = () => {
   const [isSending, setIsSending] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const { 
-    sendMessage, 
-    addAIMessage, 
+  const {
+    sendMessage,
+    addAIMessage,
     updateMessageStatus,
     currentConversation,
-    messages 
+    messages
   } = useChatStore();
 
   const { currentCharacter } = useCharacterStore();
-  const { currentAPIConfig, activeGlobalPrompt } = useSettingsStore();
+  const { currentAPIConfig, getActivePrompts } = useSettingsStore();
   const { showNotification } = useAppStore();
+
+  // 集成AI回复拆分功能
+  const {
+    handleAIResponse,
+    isDisplayingSequence,
+    typingCharacter,
+    cancelSequence
+  } = useAIResponseSplitter();
 
   // 发送消息
   const handleSendMessage = useCallback(async (content: string, character?: Character) => {
@@ -48,7 +57,8 @@ export const useChat = () => {
       await sendMessage(content.trim(), targetCharacter.id);
       
       // 准备AI请求
-      const systemPrompt = buildSystemPrompt(targetCharacter, activeGlobalPrompt);
+      const activePrompts = getActivePrompts();
+      const systemPrompt = buildSystemPrompt(targetCharacter, activePrompts);
       const conversationMessages = currentConversation?.messages || [];
       
       // 构建消息历史（最近10条消息）
@@ -76,8 +86,8 @@ export const useChat = () => {
         abortControllerRef.current.signal
       );
 
-      // 添加AI回复
-      addAIMessage(aiResponse, targetCharacter.id);
+      // 使用拆分器处理AI回复
+      await handleAIResponse(aiResponse, targetCharacter.id);
       
     } catch (error) {
       const errorMessage = formatErrorMessage(error);
@@ -90,7 +100,7 @@ export const useChat = () => {
   }, [
     currentCharacter,
     currentAPIConfig,
-    activeGlobalPrompt,
+    getActivePrompts,
     currentConversation,
     sendMessage,
     addAIMessage,
@@ -105,7 +115,10 @@ export const useChat = () => {
       setIsSending(false);
       showNotification('已取消发送', 'info');
     }
-  }, [showNotification]);
+
+    // 同时取消消息序列显示
+    cancelSequence();
+  }, [showNotification, cancelSequence]);
 
   // 重新发送消息
   const resendMessage = useCallback(async (messageId: string) => {
@@ -118,11 +131,14 @@ export const useChat = () => {
   }, [messages, handleSendMessage]);
 
   return {
-    isSending,
+    isSending: isSending || isDisplayingSequence,
     messages,
     currentConversation,
     handleSendMessage,
     cancelSending,
     resendMessage,
+    // 新增的拆分相关状态
+    isDisplayingSequence,
+    typingCharacter,
   };
 };

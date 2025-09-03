@@ -6,6 +6,7 @@ import { useAppStore } from '../stores/appStore';
 import type { Character } from '../types/index';
 import { useStaggeredAnimation } from '../hooks/useAnimation';
 import { CharacterForm } from '../components/character/CharacterForm';
+import { DeleteConfirmDialog } from '../components/character/DeleteConfirmDialog';
 
 interface CharacterCardProps {
   character: Character;
@@ -22,7 +23,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   onChat,
   animationProps
 }) => {
-  const [showEditButton, setShowEditButton] = useState(false);
+  // 移动端不需要悬停状态，直接显示操作按钮
 
   const getVoiceStyleText = (style: string) => {
     const styleMap = {
@@ -53,6 +54,11 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     onEdit(character);
   };
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击
+    onDelete(character);
+  };
+
   return (
     <motion.div
       className="relative overflow-hidden rounded-2xl p-4 transition-all duration-200 cursor-pointer"
@@ -68,8 +74,6 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       }}
       whileTap={{ scale: 0.98 }}
       onClick={handleCardClick}
-      onHoverStart={() => setShowEditButton(true)}
-      onHoverEnd={() => setShowEditButton(false)}
     >
       <div className="flex items-center">
         {/* 头像 */}
@@ -109,32 +113,44 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
           </p>
         </div>
 
-        {/* 编辑按钮 */}
-        <AnimatePresence>
-          {showEditButton && (
-            <motion.button
-              className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
-              style={{
-                backgroundColor: '#F3D9FF',
-                color: '#8B5CF6'
-              }}
-              onClick={handleEditClick}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E3C9EF'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F3D9FF'}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {/* 操作按钮组 - 移动端直接显示 */}
+        <div className="flex items-center space-x-2 ml-2">
+          {/* 编辑按钮 */}
+          <motion.button
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
+            style={{
+              backgroundColor: '#D1E7FE',
+              color: '#4A90E2'
+            }}
+            onClick={handleEditClick}
+            whileTap={{ scale: 0.9 }}
+            title="编辑角色"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </motion.button>
+
+          {/* 删除按钮 */}
+          <motion.button
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
+            style={{
+              backgroundColor: '#FED7D7',
+              color: '#E53E3E'
+            }}
+            onClick={handleDeleteClick}
+            whileTap={{ scale: 0.9 }}
+            title="删除角色"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M10 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M14 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </motion.button>
+        </div>
       </div>
 
       {/* 注释：喜好和厌恶标签（暂时隐藏，后续功能会用到） */}
@@ -206,7 +222,13 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
 };
 
 export const ContactsPage: React.FC = () => {
-  const { characters, loadCharacters, deleteCharacter, setCurrentCharacter } = useCharacterStore();
+  const {
+    characters,
+    loadCharacters,
+    deleteCharacterWithData,
+    getCharacterStats,
+    setCurrentCharacter
+  } = useCharacterStore();
   const { showNotification } = useAppStore();
 
   // 确保 characters 是数组
@@ -216,6 +238,12 @@ export const ContactsPage: React.FC = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | undefined>(undefined);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingCharacter, setDeletingCharacter] = useState<Character | null>(null);
+  const [characterStats, setCharacterStats] = useState<{ conversationCount: number; messageCount: number }>({
+    conversationCount: 0,
+    messageCount: 0
+  });
 
   useEffect(() => {
     loadCharacters();
@@ -227,14 +255,32 @@ export const ContactsPage: React.FC = () => {
   };
 
   const handleDeleteCharacter = async (character: Character) => {
-    if (window.confirm(`确定要删除角色 "${character.name}" 吗？`)) {
-      try {
-        await deleteCharacter(character.id);
-        showNotification('角色删除成功', 'success');
-      } catch (error) {
-        showNotification('删除失败', 'error');
-      }
+    try {
+      // 获取角色统计信息
+      const stats = await getCharacterStats(character.id);
+      setCharacterStats(stats);
+      setDeletingCharacter(character);
+      setDeleteDialogOpen(true);
+    } catch (error) {
+      showNotification('获取角色信息失败', 'error');
     }
+  };
+
+  const handleConfirmDelete = async (character: Character) => {
+    try {
+      await deleteCharacterWithData(character.id);
+      showNotification(`角色 "${character.name}" 及相关数据已删除`, 'success');
+      setDeleteDialogOpen(false);
+      setDeletingCharacter(null);
+    } catch (error) {
+      showNotification('删除失败', 'error');
+      throw error;
+    }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setDeletingCharacter(null);
   };
 
   const handleChatWithCharacter = (character: Character) => {
@@ -253,9 +299,25 @@ export const ContactsPage: React.FC = () => {
     setEditingCharacter(undefined);
   };
 
-  const handleCharacterSave = (character: Character) => {
+  const handleCharacterSave = async (character: Character) => {
     // 角色保存后的回调，可以在这里做一些额外处理
-    loadCharacters(); // 重新加载角色列表
+    await loadCharacters(); // 重新加载角色列表
+
+    // 如果是新创建的角色，自动开始聊天
+    if (!editingCharacter) {
+      // 这是新创建的角色，等待一下让store更新完成，然后获取真实的角色数据
+      setTimeout(async () => {
+        await loadCharacters(); // 确保获取最新的角色列表
+        // 通过名字找到新创建的角色（因为临时ID可能不准确）
+        const newCharacter = characters.find(c => c.name === character.name);
+
+        if (newCharacter) {
+          setCurrentCharacter(newCharacter);
+          navigate('/chat');
+          showNotification(`开始与 ${newCharacter.name} 聊天`, 'success');
+        }
+      }, 300); // 稍微延迟一下，让store更新完成
+    }
   };
 
   return (
@@ -397,6 +459,16 @@ export const ContactsPage: React.FC = () => {
         isOpen={isFormOpen}
         onClose={handleFormClose}
         onSave={handleCharacterSave}
+      />
+
+      {/* 删除确认对话框 */}
+      <DeleteConfirmDialog
+        character={deletingCharacter}
+        isOpen={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        onConfirm={handleConfirmDelete}
+        conversationCount={characterStats.conversationCount}
+        messageCount={characterStats.messageCount}
       />
     </div>
   );

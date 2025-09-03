@@ -162,7 +162,8 @@ export const useChatStore = create<ChatStore>()(
             }));
 
           // 构建系统提示词
-          const systemPrompt = buildSystemPrompt(character, settingsStore.activeGlobalPrompt || undefined);
+          const activePrompts = settingsStore.getActivePrompts();
+          const systemPrompt = buildSystemPrompt(character, activePrompts);
           
           // 构建完整的API消息
           const apiMessages = [

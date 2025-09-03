@@ -7,6 +7,7 @@ import { APIConfigForm } from '../components/settings/APIConfigForm';
 import { APIConfigModal } from '../components/settings/APIConfigModal';
 import { APIConfigCard } from '../components/settings/APIConfigCard';
 import { AIConfigPanel } from '../components/settings/AIConfigPanel';
+import { GlobalPromptSettings } from '../components/settings/GlobalPromptSettings';
 
 interface SettingItemProps {
   title: string;
@@ -380,6 +381,16 @@ export const SettingsPage: React.FC = () => {
               )) || []}
             </div>
           )}
+        </motion.div>
+
+        {/* 全局提示词设置 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mt-8"
+        >
+          <GlobalPromptSettings />
         </motion.div>
 
         {/* 数据管理 */}

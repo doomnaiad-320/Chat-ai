@@ -20,6 +20,12 @@ export interface Message {
   characterId?: string;
   timestamp: Date;
   status: 'sending' | 'sent' | 'error';
+  // AI回复拆分相关字段
+  messageType?: 'text' | 'emoji' | 'voice' | 'quote' | 'inner_voice' | 'essay' | 'system' | 'narrator';
+  shouldRetract?: boolean;
+  retractDelay?: number;
+  displayDelay?: number;
+  originalSender?: string; // 用于多角色场景
 }
 
 // 对话会话类型定义
@@ -56,10 +62,31 @@ export interface AppSettings {
 // 全局Prompt配置
 export interface GlobalPrompt {
   id: string;
+  name: string;
   content: string;
   isActive: boolean;
+  type: 'system' | 'personality' | 'style' | 'custom';
+  priority: number; // 优先级，数字越大优先级越高
   createdAt: Date;
   updatedAt: Date;
+}
+
+// 语气词配置
+export interface ToneConfig {
+  cute: string[];
+  gentle: string[];
+  serious: string[];
+  humorous: string[];
+  energetic: string[];
+}
+
+// AI回复风格配置
+export interface AIStyleConfig {
+  useEmoji: boolean;
+  maxSentences: number;
+  useToneWords: boolean;
+  conversationalStyle: boolean;
+  characterConsistency: boolean;
 }
 
 // 标签页类型

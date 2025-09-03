@@ -1,40 +1,45 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { APIConfig, AppSettings, GlobalPrompt } from '../types/index';
+import type { APIConfig, AppSettings, GlobalPrompt, AIStyleConfig } from '../types/index';
 import { get as idbGet, set as idbSet } from 'idb-keyval';
+import { BUILTIN_GLOBAL_PROMPTS, DEFAULT_AI_STYLE } from '../config/globalPrompts';
 
 interface SettingsStore {
   apiConfigs: APIConfig[];
   currentAPIConfig: APIConfig | null;
   appSettings: AppSettings;
   globalPrompts: GlobalPrompt[];
-  activeGlobalPrompt: GlobalPrompt | null;
+  activeGlobalPrompts: GlobalPrompt[]; // 改为数组，支持多个激活的提示词
+  aiStyleConfig: AIStyleConfig;
   loading: boolean;
   error: string | null;
-  
+
   // API配置相关
   addAPIConfig: (config: Omit<APIConfig, 'id' | 'createdAt'>) => Promise<void>;
   updateAPIConfig: (id: string, updates: Partial<APIConfig>) => Promise<void>;
   deleteAPIConfig: (id: string) => Promise<void>;
   setCurrentAPIConfig: (config: APIConfig) => void;
   testAPIConfig: (config: Partial<APIConfig>) => Promise<boolean>;
-  
+
   // 应用设置相关
   updateAppSettings: (settings: Partial<AppSettings>) => void;
-  
+  updateAIStyleConfig: (config: Partial<AIStyleConfig>) => void;
+
   // 全局Prompt相关
   addGlobalPrompt: (prompt: Omit<GlobalPrompt, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateGlobalPrompt: (id: string, updates: Partial<GlobalPrompt>) => Promise<void>;
   deleteGlobalPrompt: (id: string) => Promise<void>;
-  setActiveGlobalPrompt: (prompt: GlobalPrompt | null) => void;
-  
+  toggleGlobalPrompt: (id: string, isActive: boolean) => Promise<void>;
+  initializeBuiltinPrompts: () => Promise<void>;
+  getActivePrompts: () => GlobalPrompt[];
+
   // 通用方法
   loadSettings: () => Promise<void>;
   clearError: () => void;
 }
 
-const generateId = () => `api_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-const generatePromptId = () => `prompt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+const generateId = () => `api_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+const generatePromptId = () => `prompt_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
 // 默认应用设置
 const defaultAppSettings: AppSettings = {
@@ -51,7 +56,8 @@ export const useSettingsStore = create<SettingsStore>()(
       currentAPIConfig: null,
       appSettings: defaultAppSettings,
       globalPrompts: [],
-      activeGlobalPrompt: null,
+      activeGlobalPrompts: [],
+      aiStyleConfig: DEFAULT_AI_STYLE,
       loading: false,
       error: null,
 
@@ -222,6 +228,11 @@ export const useSettingsStore = create<SettingsStore>()(
         set({ appSettings: updatedSettings });
       },
 
+      updateAIStyleConfig: (config) => {
+        const updatedConfig = { ...get().aiStyleConfig, ...config };
+        set({ aiStyleConfig: updatedConfig });
+      },
+
       addGlobalPrompt: async (promptData) => {
         try {
           const newPrompt: GlobalPrompt = {
@@ -257,13 +268,12 @@ export const useSettingsStore = create<SettingsStore>()(
           
           set({ globalPrompts: updatedPrompts });
 
-          // 如果更新的是当前激活的Prompt
-          const activePrompt = get().activeGlobalPrompt;
-          if (activePrompt && activePrompt.id === id) {
-            set({ 
-              activeGlobalPrompt: { ...activePrompt, ...updates, updatedAt: new Date() }
-            });
-          }
+          // 如果更新的是当前激活的Prompt，更新激活列表
+          const activePrompts = get().activeGlobalPrompts;
+          const updatedActivePrompts = activePrompts.map(prompt =>
+            prompt.id === id ? { ...prompt, ...updates, updatedAt: new Date() } : prompt
+          );
+          set({ activeGlobalPrompts: updatedActivePrompts });
         } catch (error) {
           set({ 
             error: error instanceof Error ? error.message : '更新全局Prompt失败'
@@ -280,11 +290,10 @@ export const useSettingsStore = create<SettingsStore>()(
           
           set({ globalPrompts: updatedPrompts });
 
-          // 如果删除的是当前激活的Prompt，清空激活状态
-          const activePrompt = get().activeGlobalPrompt;
-          if (activePrompt && activePrompt.id === id) {
-            set({ activeGlobalPrompt: null });
-          }
+          // 如果删除的是当前激活的Prompt，从激活列表中移除
+          const activePrompts = get().activeGlobalPrompts;
+          const updatedActivePrompts = activePrompts.filter(prompt => prompt.id !== id);
+          set({ activeGlobalPrompts: updatedActivePrompts });
         } catch (error) {
           set({ 
             error: error instanceof Error ? error.message : '删除全局Prompt失败'
@@ -292,8 +301,58 @@ export const useSettingsStore = create<SettingsStore>()(
         }
       },
 
-      setActiveGlobalPrompt: (prompt) => {
-        set({ activeGlobalPrompt: prompt });
+      toggleGlobalPrompt: async (id, isActive) => {
+        try {
+          const currentPrompts = get().globalPrompts;
+          const updatedPrompts = currentPrompts.map(prompt =>
+            prompt.id === id ? { ...prompt, isActive, updatedAt: new Date() } : prompt
+          );
+
+          await idbSet('globalPrompts', updatedPrompts);
+          set({ globalPrompts: updatedPrompts });
+
+          // 更新激活列表
+          const activePrompts = updatedPrompts.filter(prompt => prompt.isActive);
+          set({ activeGlobalPrompts: activePrompts });
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : '切换全局Prompt状态失败'
+          });
+        }
+      },
+
+      initializeBuiltinPrompts: async () => {
+        try {
+          const currentPrompts = get().globalPrompts;
+          const builtinPrompts = BUILTIN_GLOBAL_PROMPTS.map(prompt => ({
+            ...prompt,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }));
+
+          // 只添加不存在的内置提示词
+          const newPrompts = builtinPrompts.filter(builtin =>
+            !currentPrompts.some(existing => existing.id === builtin.id)
+          );
+
+          if (newPrompts.length > 0) {
+            const updatedPrompts = [...currentPrompts, ...newPrompts];
+            await idbSet('globalPrompts', updatedPrompts);
+            set({ globalPrompts: updatedPrompts });
+
+            // 更新激活列表
+            const activePrompts = updatedPrompts.filter(prompt => prompt.isActive);
+            set({ activeGlobalPrompts: activePrompts });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : '初始化内置提示词失败'
+          });
+        }
+      },
+
+      getActivePrompts: () => {
+        return get().activeGlobalPrompts.sort((a, b) => b.priority - a.priority);
       },
 
       loadSettings: async () => {
@@ -306,13 +365,13 @@ export const useSettingsStore = create<SettingsStore>()(
           ]);
           
           const defaultConfig = (savedAPIConfigs as APIConfig[]).find((config: APIConfig) => config.isDefault) || (savedAPIConfigs as APIConfig[])[0] || null;
-          const activePrompt = (savedGlobalPrompts as GlobalPrompt[]).find((prompt: GlobalPrompt) => prompt.isActive) || null;
-          
+          const activePrompts = (savedGlobalPrompts as GlobalPrompt[]).filter((prompt: GlobalPrompt) => prompt.isActive);
+
           set({
             apiConfigs: savedAPIConfigs as APIConfig[],
             currentAPIConfig: defaultConfig,
             globalPrompts: savedGlobalPrompts as GlobalPrompt[],
-            activeGlobalPrompt: activePrompt,
+            activeGlobalPrompts: activePrompts,
             loading: false
           });
         } catch (error) {
@@ -334,7 +393,8 @@ export const useSettingsStore = create<SettingsStore>()(
         currentAPIConfig: state.currentAPIConfig,
         appSettings: state.appSettings,
         globalPrompts: state.globalPrompts,
-        activeGlobalPrompt: state.activeGlobalPrompt,
+        activeGlobalPrompts: state.activeGlobalPrompts,
+        aiStyleConfig: state.aiStyleConfig,
       }),
     }
   )

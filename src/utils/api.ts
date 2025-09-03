@@ -4,24 +4,44 @@ import type { ChatRequest, ChatResponse, APIConfig, Character, GlobalPrompt } fr
 const DEFAULT_TIMEOUT = 30000; // 30秒超时
 
 // 构建聊天请求的系统提示词
-export const buildSystemPrompt = (character: Character, globalPrompt?: GlobalPrompt): string => {
+export const buildSystemPrompt = (character: Character, globalPrompts?: GlobalPrompt[]): string => {
   let systemPrompt = '';
-  
-  // 添加全局提示词
-  if (globalPrompt && globalPrompt.isActive) {
-    systemPrompt += globalPrompt.content + '\n\n';
+
+  // 添加全局提示词（按优先级排序）
+  if (globalPrompts && globalPrompts.length > 0) {
+    const activePrompts = globalPrompts
+      .filter(prompt => prompt.isActive)
+      .sort((a, b) => b.priority - a.priority);
+
+    for (const prompt of activePrompts) {
+      systemPrompt += prompt.content + '\n\n';
+    }
   }
-  
+
   // 添加角色专属提示词
-  const characterPrompt = `你现在是${character.name}，性别${character.gender === 'male' ? '男' : character.gender === 'female' ? '女' : '其他'}，喜欢${character.likes.join('、')}，讨厌${character.dislikes.join('、')}。
+  const voiceStyleMap = {
+    cute: '可爱',
+    serious: '严肃',
+    humorous: '幽默',
+    gentle: '温柔',
+    energetic: '活泼'
+  };
+
+  const genderMap = {
+    male: '男',
+    female: '女',
+    other: '其他'
+  };
+
+  const characterPrompt = `你现在是${character.name}，性别${genderMap[character.gender]}，喜欢${character.likes.join('、')}，讨厌${character.dislikes.join('、')}。
 
 背景故事：${character.background}
 
-请完全沉浸在这个角色中，用${character.voiceStyle === 'cute' ? '可爱' : character.voiceStyle === 'serious' ? '严肃' : character.voiceStyle === 'humorous' ? '幽默' : character.voiceStyle === 'gentle' ? '温柔' : '活泼'}的语气与我对话。
+请完全沉浸在这个角色中，用${voiceStyleMap[character.voiceStyle] || '自然'}的语气与我对话。
 保持角色一致性，不要跳出角色设定。`;
 
   systemPrompt += characterPrompt;
-  
+
   return systemPrompt;
 };
 

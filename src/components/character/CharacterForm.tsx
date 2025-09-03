@@ -119,19 +119,29 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({
         dislikes: formData.dislikes.split(',').map(item => item.trim()).filter(item => item),
       };
 
+      let savedCharacter: Character;
+
       if (character) {
         // 更新角色
         await updateCharacter(character.id, characterData);
+        savedCharacter = { ...character, ...characterData, updatedAt: new Date() };
         showNotification('角色更新成功', 'success');
       } else {
         // 创建新角色
         await addCharacter(characterData);
+        // 创建一个临时的角色对象用于回调
+        savedCharacter = {
+          ...characterData,
+          id: `temp_${Date.now()}`, // 临时ID，实际ID由store生成
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
         showNotification('角色创建成功', 'success');
       }
 
       onClose();
-      if (onSave && character) {
-        onSave({ ...character, ...characterData, updatedAt: new Date() });
+      if (onSave) {
+        onSave(savedCharacter);
       }
     } catch (error) {
       showNotification(character ? '角色更新失败' : '角色创建失败', 'error');
