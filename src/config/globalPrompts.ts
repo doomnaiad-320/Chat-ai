@@ -276,7 +276,7 @@ export const getRandomToneWord = (voiceStyle: string): string => {
 };
 
 // 随机选择表情符号 - 已禁用
-export const getRandomEmoji = (voiceStyle: string): string => {
+export const getRandomEmoji = (): string => {
   // 返回空字符串，完全禁用emoji
   return '';
 };

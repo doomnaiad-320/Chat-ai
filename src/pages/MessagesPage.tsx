@@ -16,7 +16,6 @@ interface ConversationItemProps {
 }
 
 const ConversationItem: React.FC<ConversationItemProps> = ({
-  conversationId,
   characterId,
   lastMessage = '开始新对话...',
   lastMessageTime,
@@ -25,7 +24,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 }) => {
   const { characters } = useCharacterStore();
   const character = characters.find(c => c.id === characterId);
-  const { ref, isVisible, animationClass } = useScrollAnimation('fade-in');
+  const { ref, animationClass } = useScrollAnimation('fade-in');
 
   if (!character) return null;
 

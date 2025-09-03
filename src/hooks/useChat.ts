@@ -17,8 +17,6 @@ export const useChat = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const {
-    addAIMessage,
-    updateMessageStatus,
     currentConversation,
     messages,
     createConversation,

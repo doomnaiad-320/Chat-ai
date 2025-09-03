@@ -319,7 +319,6 @@ export const ChatPage: React.FC = () => {
                 <ChatBubble
                   key={message.id}
                   message={message}
-                  isLatest={index === messages.length - 1}
                   delay={0}
                   innerVoiceText={innerVoiceText}
                 />

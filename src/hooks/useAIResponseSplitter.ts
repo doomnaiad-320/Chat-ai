@@ -21,7 +21,7 @@ export const useAIResponseSplitter = () => {
   const controllerRef = useRef<MessageDisplayController | null>(null);
   const retractedMessagesRef = useRef(new Set<string>());
 
-  const { addAIMessage, updateMessageStatus, currentConversation } = useChatStore();
+  const { addAIMessage, currentConversation } = useChatStore();
   const { showNotification } = useAppStore();
   const { aiStyleConfig } = useSettingsStore();
   const { characters } = useCharacterStore();
@@ -56,13 +56,6 @@ export const useAIResponseSplitter = () => {
         if (conversation) {
           const messageIndex = conversation.messages.findIndex(msg => msg.id === messageId);
           if (messageIndex !== -1) {
-            // 创建一个新的撤回消息
-            const retractMessage: Message = {
-              ...conversation.messages[messageIndex],
-              content: '对方撤回了一条消息',
-              messageType: 'system'
-            };
-            
             // 这里需要你实现一个更新特定消息的方法
             // 或者通过其他方式来显示撤回效果
             console.log('消息已撤回:', messageId);
