@@ -7,17 +7,35 @@ interface ChatBubbleProps {
   message: Message;
   isLatest?: boolean;
   delay?: number;
+  innerVoiceText?: string; // 心声文本，附加在普通消息下方
 }
 
 export const ChatBubble: React.FC<ChatBubbleProps> = ({
   message,
   isLatest = false,
-  delay = 0
+  delay = 0,
+  innerVoiceText
 }) => {
   const { animationClass, isVisible } = useBubbleAnimation(delay);
 
   const isUser = message.sender === 'user';
   const isAI = message.sender === 'ai';
+  const isInnerVoice = message.messageType === 'inner_voice';
+
+  // 调试信息
+  if (message.messageType) {
+    console.log('🎨 ChatBubble渲染消息:', {
+      messageType: message.messageType,
+      isInnerVoice,
+      content: message.content.substring(0, 30) + '...',
+      hasInnerVoice: !!innerVoiceText
+    });
+  }
+
+  // 如果是心声消息，不渲染独立气泡
+  if (isInnerVoice) {
+    return null;
+  }
 
   // 格式化时间
   const formatTime = (date: Date | string) => {
@@ -72,7 +90,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
       variants={bubbleVariants}
     >
       <div className={`flex max-w-[80%] items-start ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-        {/* 头像 - 独立在气泡外部 */}
+        {/* 头像 */}
         <motion.div
           className={`
             flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-lg
@@ -85,7 +103,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           whileHover="wiggle"
           variants={wiggleVariants}
         >
-          <span>{isUser ? '👤' : '🤖'}</span>
+          <span>{isUser ? 'U' : 'AI'}</span>
         </motion.div>
 
         {/* 气泡和时间戳容器 */}
@@ -93,10 +111,10 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           {/* 对话气泡 */}
           <motion.div
             className={`
-              relative rounded-2xl shadow-lg px-3 py-2
+              relative rounded-2xl px-3 py-2
               ${isUser
-                ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-white'
-                : 'bg-white text-gray-800 border border-gray-100'
+                ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-white shadow-lg'
+                : 'bg-white text-gray-800 border border-gray-100 shadow-lg'
               }
               ${animationClass}
             `}
@@ -119,7 +137,9 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
 
             {/* 消息内容 */}
             <div>
-              <span className="text-sm leading-snug">{message.content}</span>
+              <span className="text-sm leading-snug">
+                {message.content}
+              </span>
             </div>
           </motion.div>
 
@@ -134,6 +154,21 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           >
             {formatTime(message.timestamp)}
           </motion.div>
+
+          {/* 心声附加区域 */}
+          {innerVoiceText && (
+            <motion.div
+              className={`mt-2 px-2 ${isUser ? 'text-right' : 'text-left'}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: (delay / 1000) + 0.5 }}
+            >
+              <div className="inline-block bg-gray-50 text-gray-500 px-3 py-1 rounded-lg text-xs italic border border-gray-200">
+                <span className="font-medium text-gray-400 mr-1">心声:</span>
+                {innerVoiceText}
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </motion.div>

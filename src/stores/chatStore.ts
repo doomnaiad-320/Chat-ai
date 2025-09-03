@@ -17,7 +17,7 @@ interface ChatStore {
   createConversation: (characterId: string) => Promise<string>;
   setCurrentConversation: (conversationId: string) => Promise<void>;
   sendMessage: (content: string, characterId: string) => Promise<void>;
-  addAIMessage: (content: string, characterId: string) => void;
+  addAIMessage: (content: string, characterId: string, messageType?: Message['messageType']) => void;
   updateMessageStatus: (messageId: string, status: Message['status']) => void;
   loadConversations: () => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
@@ -220,7 +220,7 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
-      addAIMessage: (content: string, characterId: string) => {
+      addAIMessage: (content: string, characterId: string, messageType?: Message['messageType']) => {
         const messageId = generateId();
         const newMessage: Message = {
           id: messageId,
@@ -228,7 +228,8 @@ export const useChatStore = create<ChatStore>()(
           sender: 'ai',
           characterId,
           timestamp: new Date(),
-          status: 'sent'
+          status: 'sent',
+          messageType: messageType // 添加 messageType 支持
         };
 
         const currentConversation = get().currentConversation;

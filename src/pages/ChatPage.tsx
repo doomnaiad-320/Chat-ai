@@ -121,7 +121,7 @@ export const ChatPage: React.FC = () => {
                   boxShadow: '0 4px 12px rgba(240, 244, 255, 0.4)'
                 }}
               >
-                <span className="text-5xl">🤖</span>
+                <span className="text-5xl">AI</span>
               </div>
               {/* 装饰性元素 */}
               <div
@@ -136,7 +136,7 @@ export const ChatPage: React.FC = () => {
 
             <h3 className="text-2xl font-medium mb-3" style={{ color: '#6B7280' }}>请先选择一个角色</h3>
             <p className="mb-8 leading-relaxed" style={{ color: '#9CA3AF' }}>
-              前往通讯录选择一个可爱的AI角色开始对话吧！✨
+              前往通讯录选择一个可爱的AI角色开始对话吧！
             </p>
 
             <div className="space-y-4">
@@ -294,14 +294,37 @@ export const ChatPage: React.FC = () => {
           </motion.div>
         ) : (
           <div className="space-y-2 min-h-full">
-            {messages.map((message, index) => (
-              <ChatBubble
-                key={message.id}
-                message={message}
-                isLatest={index === messages.length - 1}
-                delay={0}
-              />
-            ))}
+            {messages.map((message, index) => {
+              console.log('🎨 ChatPage渲染消息:', {
+                index,
+                messageType: message.messageType,
+                content: message.content.substring(0, 30) + '...'
+              });
+
+              // 跳过心声消息，它们会附加到普通消息上
+              if (message.messageType === 'inner_voice') {
+                console.log('🚫 跳过心声消息:', message.content.substring(0, 30) + '...');
+                return null;
+              }
+
+              // 查找下一条心声消息
+              let innerVoiceText: string | undefined;
+              const nextMessage = messages[index + 1];
+              if (nextMessage && nextMessage.messageType === 'inner_voice') {
+                innerVoiceText = nextMessage.content;
+                console.log('💭 找到心声消息，附加到当前消息:', innerVoiceText.substring(0, 30) + '...');
+              }
+
+              return (
+                <ChatBubble
+                  key={message.id}
+                  message={message}
+                  isLatest={index === messages.length - 1}
+                  delay={0}
+                  innerVoiceText={innerVoiceText}
+                />
+              );
+            }).filter(Boolean)}
             
             {/* 正在发送指示器 */}
             <AnimatePresence>

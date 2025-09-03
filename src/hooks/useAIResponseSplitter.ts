@@ -40,7 +40,7 @@ export const useAIResponseSplitter = () => {
           content: message.content.substring(0, 50) + '...',
           sender: message.originalSender
         });
-        addAIMessage(message.content, message.characterId!);
+        addAIMessage(message.content, message.characterId!, message.messageType);
 
         // 返回添加的消息（用于后续撤回）
         return Promise.resolve();

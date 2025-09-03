@@ -17,7 +17,7 @@ export interface RewriteConfig {
 }
 
 export const DEFAULT_REWRITE_CONFIG: RewriteConfig = {
-  enableEmojis: true,
+  enableEmojis: false,  // 禁用emoji改写
   enableToneWords: true,
   enableStructure: true,
   randomness: 0.8,

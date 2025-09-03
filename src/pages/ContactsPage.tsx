@@ -388,7 +388,7 @@ export const ContactsPage: React.FC = () => {
             </h3>
 
             <p className="mb-8 max-w-xs leading-relaxed" style={{ color: '#9CA3AF' }}>
-              创建你的第一个AI角色，开始奇妙的虚拟友谊！🤖💕
+              创建你的第一个AI角色，开始奇妙的虚拟友谊！
             </p>
 
             <div className="space-y-4">

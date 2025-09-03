@@ -34,9 +34,9 @@ export class AIResponseProcessor {
   constructor(styleConfig: AIStyleConfig) {
     this.styleConfig = styleConfig;
     this.lengthConfig = {
-      maxCharacters: 300,        // 增加到300个字符，支持更长回复
-      maxSentences: 8,           // 增加到8句话，支持更多气泡
-      maxCharactersPerSentence: 50, // 保持每句50个字符
+      maxCharacters: 120,        // 设为120字符，符合你的需求
+      maxSentences: 6,           // 最多6句话，增加随机性
+      maxCharactersPerSentence: 30, // 每句最多30个字符，更短更自然
       enableStrictMode: true
     };
     this.violationStats = {
@@ -51,6 +51,9 @@ export class AIResponseProcessor {
   processResponse(response: string, character: Character): string {
     const originalResponse = response.trim();
     let processedResponse = originalResponse;
+
+    // 0. 【强制】清理所有emoji（无论什么格式）
+    processedResponse = this.forceRemoveEmojis(processedResponse);
 
     // 1. 【新增】检查是否为拆分格式回复
     if (this.hasSplitFormat(processedResponse)) {
@@ -390,6 +393,23 @@ export class AIResponseProcessor {
     // 在文本末尾添加表情符号
     const result = text + ' ' + emoji;
     return this.finalLengthCheck(result);
+  }
+
+  // 强制移除所有emoji表情符号
+  private forceRemoveEmojis(text: string): string {
+    // 匹配所有emoji的正则表达式
+    const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F900}-\u{1F9FF}]|[\u{1F018}-\u{1F270}]/gu;
+
+    const cleaned = text.replace(emojiRegex, '').replace(/\s+/g, ' ').trim();
+
+    if (cleaned !== text) {
+      console.log('🚫 强制清理emoji:', {
+        original: text.substring(0, 50) + '...',
+        cleaned: cleaned.substring(0, 50) + '...'
+      });
+    }
+
+    return cleaned;
   }
 
   // 获取违规统计

@@ -2,13 +2,14 @@ import type { Message } from '../types';
 
 // 消息格式配置
 export const MESSAGE_FORMATS = {
-  TEXT: /\[([^|]+)\|([^\]]+)\]/g,           // [角色名|消息内容]
-  EMOJI: /<([^|]+)\|([^>]+)>/g,            // <角色名|表情ID>
-  VOICE: /\[([^|]+)\|语音\|([^|]+)\|([^\]]+)\]/g, // [角色名|语音|时长|内容]
-  RETRACT: /\{([^|]+)\|([^}]+)\}/g,        // {角色名|要撤回的内容}
-  QUOTE: /\[([^|]+)\|引用\|([^|]+)\|([^|]+)\|([^\]]+)\]/g, // [角色名|引用|被引用人|被引用内容|新内容]
-  INNER_VOICE: /【心声\|([^|]+)\|([^】]+)】/g,  // 【心声|角色名|内心想法】
-  ESSAY: /「随笔\|([^|]+)\|([^」]+)」/g,        // 「随笔|角色名|随笔内容」
+  // 更强健的正则表达式，支持嵌套括号和特殊字符
+  TEXT: /\[([^|\[\]]+)\|([^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*)\]/g,           // [角色名|消息内容]
+  EMOJI: /<([^|<>]+)\|([^<>]+)>/g,            // <角色名|表情ID>
+  VOICE: /\[([^|\[\]]+)\|语音\|([^|\[\]]+)\|([^\[\]]+)\]/g, // [角色名|语音|时长|内容]
+  RETRACT: /\{([^|{}]+)\|([^{}]+)\}/g,        // {角色名|要撤回的内容}
+  QUOTE: /\[([^|\[\]]+)\|引用\|([^|\[\]]+)\|([^|\[\]]+)\|([^\[\]]+)\]/g, // [角色名|引用|被引用人|被引用内容|新内容]
+  INNER_VOICE: /【心声\|([^|【】]+)\|([^【】]+)】/g,  // 【心声|角色名|内心想法】
+  ESSAY: /「随笔\|([^|「」]+)\|([^「」]+)」/g,        // 「随笔|角色名|随笔内容」
   SYSTEM: /<系统>([^<]+)<\/系统>/g,         // <系统>系统消息</系统>
   NARRATOR: /<旁白>([^<]+)<\/旁白>/g        // <旁白>旁白内容</旁白>
 };
@@ -37,9 +38,8 @@ export class AIResponseSplitter {
 
   // 解析AI回复文本
   parseAIResponse(responseText: string, characterId: string): Message[] {
-    const messages: Message[] = [];
-    let messageIndex = 0;
-    
+    console.log('🔍 开始解析AI回复:', responseText.substring(0, 200) + '...');
+
     // 按顺序匹配所有格式
     const allMatches: Array<{
       type: string;
@@ -47,12 +47,17 @@ export class AIResponseSplitter {
       index: number;
       content: string;
     }> = [];
-    
+
     // 收集所有匹配项及其位置
     Object.entries(MESSAGE_FORMATS).forEach(([type, regex]) => {
       let match;
       const tempRegex = new RegExp(regex.source, 'g');
       while ((match = tempRegex.exec(responseText)) !== null) {
+        console.log(`🎯 匹配到 ${type}:`, {
+          fullMatch: match[0],
+          groups: match.slice(1),
+          index: match.index
+        });
         allMatches.push({
           type: type.toLowerCase(),
           match: match,
@@ -64,16 +69,61 @@ export class AIResponseSplitter {
     
     // 按位置排序
     allMatches.sort((a, b) => a.index - b.index);
-    
-    // 解析每个匹配项
-    allMatches.forEach((item, index) => {
-      const messageData = this.parseMessageByType(item, characterId, index);
-      if (messageData) {
-        messages.push(messageData);
+
+    // 处理未匹配的文本和格式化消息
+    const allMessages: Message[] = [];
+    let lastIndex = 0;
+    let messageIndex = 0;
+
+    allMatches.forEach((item) => {
+      // 处理匹配项之前的未格式化文本
+      if (item.index > lastIndex) {
+        const unmatchedText = responseText.slice(lastIndex, item.index).trim();
+        if (unmatchedText) {
+          console.log('📝 处理未格式化文本:', unmatchedText.substring(0, 50) + '...');
+          // 将未格式化文本作为普通消息，使用默认角色名
+          const defaultSender = 'AI'; // 可以从characterId获取更具体的名称
+          const textMessage = this.createMessage(
+            'text',
+            defaultSender,
+            unmatchedText,
+            characterId,
+            new Date(Date.now() + (messageIndex * 100))
+          );
+          allMessages.push(textMessage);
+          messageIndex++;
+        }
       }
+
+      // 处理格式化消息
+      const messageData = this.parseMessageByType(item, characterId, messageIndex);
+      if (messageData) {
+        allMessages.push(messageData);
+        messageIndex++;
+      }
+
+      // 更新最后处理的位置
+      lastIndex = item.index + item.content.length;
     });
-    
-    return messages;
+
+    // 处理最后剩余的未格式化文本
+    if (lastIndex < responseText.length) {
+      const remainingText = responseText.slice(lastIndex).trim();
+      if (remainingText) {
+        console.log('📝 处理剩余未格式化文本:', remainingText.substring(0, 50) + '...');
+        const defaultSender = 'AI';
+        const textMessage = this.createMessage(
+          'text',
+          defaultSender,
+          remainingText,
+          characterId,
+          new Date(Date.now() + (messageIndex * 100))
+        );
+        allMessages.push(textMessage);
+      }
+    }
+
+    return allMessages;
   }
 
   // 根据类型解析消息
@@ -106,10 +156,11 @@ export class AIResponseSplitter {
           characterId, baseTimestamp);
       
       case 'inner_voice':
-        return this.createMessage('inner_voice', match[1], `💭 ${match[2]}`, characterId, baseTimestamp);
-      
+        console.log('🎭 创建心声消息:', { sender: match[1], content: match[2] });
+        return this.createMessage('inner_voice', match[1], match[2], characterId, baseTimestamp);
+
       case 'essay':
-        return this.createMessage('essay', match[1], `📝 ${match[2]}`, characterId, baseTimestamp);
+        return this.createMessage('essay', match[1], match[2], characterId, baseTimestamp);
       
       case 'system':
         return this.createMessage('system', 'System', `[系统] ${match[1]}`, characterId, baseTimestamp);
