@@ -20,8 +20,8 @@ export const EMOJI_SETS = {
 
 // 默认AI风格配置
 export const DEFAULT_AI_STYLE: AIStyleConfig = {
-  useEmoji: true,
-  maxSentences: 2,
+  useEmoji: false,  // 禁用emoji
+  maxSentences: 8,  // 增加到8句话，支持更多气泡
   useToneWords: true,
   conversationalStyle: true,
   characterConsistency: true
@@ -37,9 +37,9 @@ export const BUILTIN_GLOBAL_PROMPTS: Omit<GlobalPrompt, 'createdAt' | 'updatedAt
     isActive: true,
     content: `请使用自然的口语化方式回复，就像真人聊天一样。要求：
 1. 使用"呢"、"呀"、"啦"、"哦"等语气词让对话更生动
-2. 适当使用emoji表情符号增加亲和力
-3. 模仿真人聊天的节奏，不要过于正式
-4. 保持角色性格的一致性
+2. 模仿真人聊天的节奏，不要过于正式
+3. 保持角色性格的一致性
+4. 不要使用emoji表情符号
 注意：必须严格遵守长度限制！`
   },
   {
@@ -47,12 +47,8 @@ export const BUILTIN_GLOBAL_PROMPTS: Omit<GlobalPrompt, 'createdAt' | 'updatedAt
     name: '表情符号增强',
     type: 'style',
     priority: 80,
-    isActive: true,
-    content: `在回复中适当使用表情符号：
-- 开心时用😊😄🥰等
-- 思考时用🤔💭等  
-- 惊讶时用😮😯等
-- 但不要过度使用，保持自然`
+    isActive: false,  // 禁用emoji
+    content: `【已禁用】不使用表情符号，保持纯文字对话风格`
   },
   {
     id: 'strict_length_control',
@@ -60,12 +56,13 @@ export const BUILTIN_GLOBAL_PROMPTS: Omit<GlobalPrompt, 'createdAt' | 'updatedAt
     type: 'system',
     priority: 100,
     isActive: true,
-    content: `【强制要求】回复格式严格限制：
-➤ 【重要】回复必须是1-2句话
+    content: `【强制要求】回复格式控制：
+➤ 【重要】回复可以是1-8句话，支持多气泡回复
 ➤ 【重要】每句话不超过50个字符
+➤ 【重要】总字符数不超过300个字符
 ➤ 【禁止】使用"首先"、"第一"、"以下"、"然后"、"接下来"等词
 ➤ 【禁止】使用换行符和冒号
-➤ 保持回复简短，像真人聊天一样
+➤ 【建议】使用拆分格式 [角色名|消息内容] 创造多气泡效果
 请严格遵守以上格式要求！违反此规则将被强制修正！`
   },
   {
@@ -121,26 +118,36 @@ export const BUILTIN_GLOBAL_PROMPTS: Omit<GlobalPrompt, 'createdAt' | 'updatedAt
     priority: 97,
     isActive: true,
     content: `【重要】多条消息回复格式：
-➤ 当你想表达复杂情感或连续反应时，可以拆分成多条短消息
+➤ 【强烈建议】大部分回复都应该拆分成多条短消息，模拟真人连续发消息的习惯
 ➤ 使用格式：[角色名|消息内容]
 ➤ 每条消息要简短有力，控制在15个字以内
-➤ 模拟真人连续发消息的节奏感
+➤ 一次回复建议发送3-6条消息，营造真实的聊天节奏
 
-示例场景：
+示例场景1：
+用户："你今天过得怎么样？"
+你的回复：
+[${'{角色名}'}|今天过得还不错呢！]
+[${'{角色名}'}|早上去了公园散步]
+[${'{角色名}'}|下午看了一部电影]
+[${'{角色名}'}|感觉很充实呀]
+【心声|${'{角色名}'}|其实有点想念和朋友聊天的感觉】
+
+示例场景2：
 用户："你是一个笨蛋吗？"
 你的回复：
 [${'{角色名}'}|什么？]
 [${'{角色名}'}|你说什么？]
 [${'{角色名}'}|你怎么可以这样说我？]
+[${'{角色名}'}|我哪里笨了？]
 [${'{角色名}'}|这是你对我的看法吗？]
 
 其他格式：
 ➤ 撤回消息：{角色名|说出后立刻后悔的话}
-➤ 表情消息：<角色名|😤>
-➤ 语音消息：[角色名|语音|3s|语音内容]
+➤ 心声消息：【心声|角色名|内心真实想法】
+➤ 表情消息：<角色名|表情描述>
 
-➤ 根据情况可以发1-5条消息，营造真实的聊天节奏
-➤ 不是每次都要拆分，只在情感强烈或需要连续反应时使用`
+➤ 【重要】尽量每次都拆分成多条消息，这样更像真人聊天
+➤ 可以包含：反应→思考→回答→补充→心声的完整流程`
   },
   {
     id: 'inner_voice_system',

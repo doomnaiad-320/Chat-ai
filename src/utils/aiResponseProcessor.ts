@@ -34,9 +34,9 @@ export class AIResponseProcessor {
   constructor(styleConfig: AIStyleConfig) {
     this.styleConfig = styleConfig;
     this.lengthConfig = {
-      maxCharacters: 50,
-      maxSentences: 2,
-      maxCharactersPerSentence: 50,
+      maxCharacters: 300,        // 增加到300个字符，支持更长回复
+      maxSentences: 8,           // 增加到8句话，支持更多气泡
+      maxCharactersPerSentence: 50, // 保持每句50个字符
       enableStrictMode: true
     };
     this.violationStats = {

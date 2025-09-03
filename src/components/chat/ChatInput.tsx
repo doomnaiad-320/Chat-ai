@@ -49,16 +49,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
-  // 处理键盘事件
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      // 只有在不是发送状态时才允许键盘发送
-      if (!isSending) {
-        handleSend();
-      }
-    }
-  };
+  // 移除键盘事件处理 - 为移动端APP做准备
+  // 不再处理Enter发送，只通过按钮发送消息
 
   // 发送/停止按钮动画变体
   const sendButtonVariants = {
@@ -162,7 +154,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder={placeholder}
@@ -269,7 +260,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              按 Enter 发送，Shift + Enter 换行
+              点击发送按钮发送消息
             </motion.div>
           )}
         </AnimatePresence>
