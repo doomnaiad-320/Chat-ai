@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { getComplianceStats, getViolationReport, complianceMonitor } from '../../utils/aiComplianceMonitor';
-import type { GlobalPrompt } from '../../types';
 
 export const GlobalPromptSettings: React.FC = () => {
   const {

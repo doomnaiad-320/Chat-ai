@@ -4,7 +4,7 @@ import { useAppStore } from '../../stores/appStore';
 import type { TabType } from '../../types';
 
 // 图标组件
-const MessageIcon = ({ active }: { active: boolean }) => (
+const MessageIcon = () => (
   <svg
     width="20"
     height="20"
@@ -19,7 +19,7 @@ const MessageIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-const ContactIcon = ({ active }: { active: boolean }) => (
+const ContactIcon = () => (
   <svg
     width="20"
     height="20"
@@ -39,7 +39,7 @@ const ContactIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-const SettingsIcon = ({ active }: { active: boolean }) => (
+const SettingsIcon = () => (
   <svg
     width="20"
     height="20"
@@ -57,7 +57,7 @@ const SettingsIcon = ({ active }: { active: boolean }) => (
 interface TabItem {
   id: TabType;
   label: string;
-  icon: React.ComponentType<{ active: boolean }>;
+  icon: React.ComponentType;
 }
 
 const tabs: TabItem[] = [
@@ -148,7 +148,7 @@ export const TabBar: React.FC = () => {
                     boxShadow: isActive ? `0 4px 12px ${tabColors.bg}40` : '0 2px 6px rgba(248, 250, 255, 0.3)'
                   }}
                 >
-                  <IconComponent active={isActive} />
+                  <IconComponent />
                 </div>
 
                 {/* 标签文字 */}

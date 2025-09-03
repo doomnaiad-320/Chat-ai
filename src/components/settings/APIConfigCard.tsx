@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import type { APIConfig } from '../../types';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { APIConfigModal } from './APIConfigModal';
 

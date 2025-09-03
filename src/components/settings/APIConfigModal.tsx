@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { APIConfig } from '../../types';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAppStore } from '../../stores/appStore';
-import { validateAPIConfig, fetchAvailableModels } from '../../utils/api';
+import { fetchAvailableModels } from '../../utils/api';
 
 interface APIConfigModalProps {
   isOpen: boolean;

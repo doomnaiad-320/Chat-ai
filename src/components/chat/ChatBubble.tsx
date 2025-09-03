@@ -5,21 +5,18 @@ import { useBubbleAnimation } from '../../hooks/useAnimation';
 
 interface ChatBubbleProps {
   message: Message;
-  isLatest?: boolean;
   delay?: number;
   innerVoiceText?: string; // 心声文本，附加在普通消息下方
 }
 
 export const ChatBubble: React.FC<ChatBubbleProps> = ({
   message,
-  isLatest = false,
   delay = 0,
   innerVoiceText
 }) => {
   const { animationClass, isVisible } = useBubbleAnimation(delay);
 
   const isUser = message.sender === 'user';
-  const isAI = message.sender === 'ai';
   const isInnerVoice = message.messageType === 'inner_voice';
 
   // 调试信息
