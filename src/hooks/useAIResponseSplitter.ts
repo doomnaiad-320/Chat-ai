@@ -35,8 +35,13 @@ export const useAIResponseSplitter = () => {
     controllerRef.current = new MessageDisplayController({
       onMessageAdd: async (message: Message) => {
         // 添加消息到store
+        console.log('🎬 MessageDisplayController 添加消息:', {
+          type: message.messageType,
+          content: message.content.substring(0, 50) + '...',
+          sender: message.originalSender
+        });
         addAIMessage(message.content, message.characterId!);
-        
+
         // 返回添加的消息（用于后续撤回）
         return Promise.resolve();
       },
@@ -85,32 +90,52 @@ export const useAIResponseSplitter = () => {
     characterId: string
   ): Promise<void> => {
     try {
+      console.log('🎯 开始处理AI回复:', aiResponseText.substring(0, 100) + '...');
+
       // 获取角色信息用于后处理
       const character = characters.find(c => c.id === characterId);
 
-      // 如果启用了AI风格配置，先处理回复文本
-      let processedResponse = aiResponseText;
-      if (character && (aiStyleConfig.useEmoji || aiStyleConfig.useToneWords || aiStyleConfig.conversationalStyle)) {
-        processedResponse = processAIResponse(aiResponseText, character, aiStyleConfig);
-      }
+      // 先检查原始回复是否包含结构化格式
+      const hasStructuredFormat = AIResponseSplitter.hasStructuredFormat(aiResponseText);
+      console.log('🔍 原始回复是否包含结构化格式:', hasStructuredFormat);
 
-      // 检查是否包含结构化格式
-      if (!AIResponseSplitter.hasStructuredFormat(processedResponse)) {
-        // 如果没有特殊格式，直接添加普通消息
+      if (!hasStructuredFormat) {
+        console.log('📝 没有结构化格式，进行常规处理');
+        // 如果没有特殊格式，进行常规处理并添加普通消息
+        let processedResponse = aiResponseText;
+        if (character && (aiStyleConfig.useEmoji || aiStyleConfig.useToneWords || aiStyleConfig.conversationalStyle)) {
+          processedResponse = processAIResponse(aiResponseText, character, aiStyleConfig);
+        }
+        console.log('➕ 添加普通消息:', processedResponse.substring(0, 50) + '...');
         addAIMessage(processedResponse, characterId);
         return;
       }
 
+      console.log('🔄 检测到拆分格式回复，开始处理...');
+
+      // 对于拆分格式回复，进行处理但不添加为普通消息
+      let processedResponse = aiResponseText;
+      if (character && (aiStyleConfig.useEmoji || aiStyleConfig.useToneWords || aiStyleConfig.conversationalStyle)) {
+        console.log('🎨 应用AI风格配置...');
+        processedResponse = processAIResponse(aiResponseText, character, aiStyleConfig);
+        console.log('🎨 风格配置后的回复:', processedResponse.substring(0, 100) + '...');
+      }
+
+      console.log('🔄 开始解析拆分格式...');
+
       // 解析AI回复
       const messages = splitterRef.current.parseAIResponse(processedResponse, characterId);
-      
+
       if (messages.length === 0) {
-        // 如果解析失败，添加原始消息
-        addAIMessage(aiResponseText, characterId);
+        console.warn('⚠️ 拆分格式解析失败，回退到普通消息');
+        console.log('➕ 添加回退消息:', processedResponse.substring(0, 50) + '...');
+        // 如果解析失败，添加处理后的消息
+        addAIMessage(processedResponse, characterId);
         return;
       }
 
-      console.log('解析到的消息序列:', messages);
+      console.log(`✅ 成功解析为 ${messages.length} 条消息，不添加原始消息`);
+      console.log('📋 解析的消息列表:', messages.map(m => ({ type: m.messageType, content: m.content.substring(0, 30) + '...' })));
 
       // 初始化控制器
       initController();
@@ -118,15 +143,17 @@ export const useAIResponseSplitter = () => {
       // 设置显示状态
       setIsDisplayingSequence(true);
 
-      // 显示消息序列
+      // 显示消息序列（不添加原始消息）
       if (controllerRef.current) {
+        console.log('🎬 开始显示消息序列...');
         await controllerRef.current.displayMessages(messages);
+        console.log('🎬 消息序列显示完成');
       }
 
     } catch (error) {
       console.error('处理AI回复时出错:', error);
       showNotification('处理AI回复时出错', 'error');
-      
+
       // 出错时显示处理后的消息
       const character = characters.find(c => c.id === characterId);
       const fallbackResponse = character && (aiStyleConfig.useEmoji || aiStyleConfig.useToneWords || aiStyleConfig.conversationalStyle)

@@ -6,18 +6,24 @@ import { useAppStore } from '../stores/appStore';
 import { sendChatRequest, buildSystemPrompt, formatErrorMessage } from '../utils/api';
 import { sendChatRequestCompatible } from '../utils/vercelApi';
 import { useAIResponseSplitter } from './useAIResponseSplitter';
-import type { Character } from '../types/index';
+import type { Character, Message, Conversation } from '../types/index';
+import { StorageManager } from '../utils/storage';
+
+// 生成消息ID的工具函数
+const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
 export const useChat = () => {
   const [isSending, setIsSending] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const {
-    sendMessage,
     addAIMessage,
     updateMessageStatus,
     currentConversation,
-    messages
+    messages,
+    createConversation,
+    setCurrentConversation,
+    conversations
   } = useChatStore();
 
   const { currentCharacter } = useCharacterStore();
@@ -31,6 +37,59 @@ export const useChat = () => {
     typingCharacter,
     cancelSequence
   } = useAIResponseSplitter();
+
+  // 手动添加用户消息（避免chatStore.sendMessage自动添加AI回复）
+  const addUserMessage = useCallback(async (content: string, characterId: string) => {
+    console.log('➕ 手动添加用户消息:', content);
+
+    const messageId = generateId();
+    const userMessage: Message = {
+      id: messageId,
+      content,
+      sender: 'user',
+      characterId,
+      timestamp: new Date(),
+      status: 'sent'
+    };
+
+    let targetConversation = currentConversation;
+
+    // 如果没有当前对话或角色不匹配，创建新对话
+    if (!targetConversation || targetConversation.characterId !== characterId) {
+      const conversationId = await createConversation(characterId);
+      await setCurrentConversation(conversationId);
+      targetConversation = currentConversation; // 重新获取
+    }
+
+    if (!targetConversation) {
+      throw new Error('无法创建对话');
+    }
+
+    // 添加用户消息到对话
+    const updatedMessages = [...targetConversation.messages, userMessage];
+    const updatedConversation: Conversation = {
+      ...targetConversation,
+      messages: updatedMessages,
+      lastMessageAt: new Date()
+    };
+
+    // 更新对话列表
+    const updatedConversations = conversations.map(conv =>
+      conv.id === targetConversation!.id ? updatedConversation : conv
+    );
+
+    // 保存到存储
+    await StorageManager.save('conversations', updatedConversations);
+
+    // 更新store状态
+    useChatStore.setState({
+      conversations: updatedConversations,
+      currentConversation: updatedConversation,
+      messages: updatedMessages
+    });
+
+    console.log('✅ 用户消息添加完成');
+  }, [currentConversation, createConversation, setCurrentConversation, conversations]);
 
   // 发送消息
   const handleSendMessage = useCallback(async (content: string, character?: Character) => {
@@ -53,15 +112,15 @@ export const useChat = () => {
 
     try {
       setIsSending(true);
-      
-      // 发送用户消息
-      await sendMessage(content.trim(), targetCharacter.id);
-      
+
+      // 手动添加用户消息（不使用chatStore.sendMessage避免自动添加AI回复）
+      await addUserMessage(content.trim(), targetCharacter.id);
+
       // 准备AI请求
       const activePrompts = getActivePrompts();
       const systemPrompt = buildSystemPrompt(targetCharacter, activePrompts);
       const conversationMessages = currentConversation?.messages || [];
-      
+
       // 构建消息历史（最近10条消息）
       const recentMessages = conversationMessages
         .slice(-10)
@@ -87,6 +146,8 @@ export const useChat = () => {
         abortControllerRef.current.signal
       );
 
+      console.log('🎯 收到AI原始回复:', aiResponse.substring(0, 100) + '...');
+
       // 使用拆分器处理AI回复
       await handleAIResponse(aiResponse, targetCharacter.id);
       
@@ -103,8 +164,8 @@ export const useChat = () => {
     currentAPIConfig,
     getActivePrompts,
     currentConversation,
-    sendMessage,
-    addAIMessage,
+    addUserMessage,
+    handleAIResponse,
     showNotification
   ]);
 
