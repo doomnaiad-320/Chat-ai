@@ -2,7 +2,7 @@ import { get as idbGet, set as idbSet } from 'idb-keyval';
 import type { GlobalPrompt } from '../types';
 
 // 违规类型
-export type ViolationType = 'length_violation' | 'sentence_violation' | 'format_violation' | 'keyword_violation';
+export type ViolationType = 'length_violation' | 'sentence_violation' | 'format_violation' | 'keyword_violation' | 'repetition_violation';
 
 // 违规统计数据
 export interface ComplianceStats {
@@ -10,6 +10,7 @@ export interface ComplianceStats {
   sentenceViolations: number;
   formatViolations: number;
   keywordViolations: number;
+  repetitionViolations: number;
   totalViolations: number;
   lastViolationTime: Date;
   promptStrengthLevel: number; // 1-5，数字越大提示词越严格
@@ -28,6 +29,7 @@ export class AIComplianceMonitor {
       sentenceViolations: 0,
       formatViolations: 0,
       keywordViolations: 0,
+      repetitionViolations: 0,
       totalViolations: 0,
       lastViolationTime: new Date(),
       promptStrengthLevel: 1

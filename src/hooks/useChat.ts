@@ -4,6 +4,7 @@ import { useCharacterStore } from '../stores/characterStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAppStore } from '../stores/appStore';
 import { sendChatRequest, buildSystemPrompt, formatErrorMessage } from '../utils/api';
+import { sendChatRequestCompatible } from '../utils/vercelApi';
 import { useAIResponseSplitter } from './useAIResponseSplitter';
 import type { Character } from '../types/index';
 
@@ -130,6 +131,34 @@ export const useChat = () => {
     await handleSendMessage(message.content);
   }, [messages, handleSendMessage]);
 
+  // 测试Vercel AI SDK
+  const testVercelAI = useCallback(async (message: string) => {
+    if (!currentAPIConfig) {
+      showNotification('请先配置API', 'error');
+      return;
+    }
+
+    try {
+      console.log('🧪 测试Vercel AI SDK...');
+      const testMessages = [
+        { role: 'user' as const, content: message }
+      ];
+
+      const response = await sendChatRequestCompatible(
+        testMessages,
+        currentAPIConfig
+      );
+
+      console.log('✅ Vercel AI SDK测试成功:', response);
+      showNotification('Vercel AI SDK测试成功!', 'success');
+      return response;
+    } catch (error) {
+      console.error('❌ Vercel AI SDK测试失败:', error);
+      showNotification(`Vercel AI SDK测试失败: ${formatErrorMessage(error)}`, 'error');
+      throw error;
+    }
+  }, [currentAPIConfig, showNotification]);
+
   return {
     isSending: isSending || isDisplayingSequence,
     messages,
@@ -137,6 +166,7 @@ export const useChat = () => {
     handleSendMessage,
     cancelSending,
     resendMessage,
+    testVercelAI, // 新增测试方法
     // 新增的拆分相关状态
     isDisplayingSequence,
     typingCharacter,

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色卡编辑测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4A90E2;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .background-textarea {
+            min-height: 120px;
+        }
+        .button {
+            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .note {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>角色卡编辑功能测试</h1>
+        
+        <div class="note">
+            <strong>修改说明：</strong><br>
+            ✅ 背景信息：移除了字符限制和必填验证，支持任意长度的自述<br>
+            ✅ 喜好/厌恶：改为textarea，支持任何文字形式，不再强制逗号分组<br>
+            ✅ 所有文本框：支持垂直调整大小
+        </div>
+
+        <form id="characterForm">
+            <div class="form-group">
+                <label for="name">角色名称 *</label>
+                <input type="text" id="name" placeholder="输入角色名称" maxlength="20">
+            </div>
+
+            <div class="form-group">
+                <label for="gender">性别</label>
+                <select id="gender">
+                    <option value="female">女</option>
+                    <option value="male">男</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="voiceStyle">语音风格</label>
+                <select id="voiceStyle">
+                    <option value="cute">🌸 可爱</option>
+                    <option value="serious">🎯 严肃</option>
+                    <option value="humorous">😄 幽默</option>
+                    <option value="gentle">💕 温柔</option>
+                    <option value="energetic">⚡ 活泼</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="likes">喜好</label>
+                <textarea id="likes" placeholder="描述角色的喜好，支持任何文字形式...&#10;例如：&#10;- 喜欢甜食，特别是草莓味的蛋糕&#10;- 热爱音乐，尤其是古典音乐&#10;- 享受安静的午后时光"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="dislikes">厌恶</label>
+                <textarea id="dislikes" placeholder="描述角色厌恶的事物，支持任何文字形式...&#10;例如：&#10;- 不喜欢吵闹的环境&#10;- 讨厌被人打断说话&#10;- 对辛辣食物过敏"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="background">背景信息</label>
+                <textarea id="background" class="background-textarea" placeholder="描述角色的背景故事、性格特点、说话风格等，支持任何长度的自述...&#10;&#10;可以包括：&#10;- 详细的人生经历&#10;- 性格特征和行为习惯&#10;- 说话方式和语言风格&#10;- 人际关系和社交偏好&#10;- 价值观和人生哲学&#10;- 任何你认为重要的角色设定"></textarea>
+            </div>
+
+            <button type="submit" class="button">保存角色</button>
+        </form>
+
+        <div id="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('characterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                gender: document.getElementById('gender').value,
+                voiceStyle: document.getElementById('voiceStyle').value,
+                likes: document.getElementById('likes').value,
+                dislikes: document.getElementById('dislikes').value,
+                background: document.getElementById('background').value
+            };
+
+            // 验证
+            if (!formData.name.trim()) {
+                alert('角色名称不能为空');
+                return;
+            }
+
+            // 显示结果
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h3>角色创建成功！</h3>
+                    <p><strong>名称：</strong>${formData.name}</p>
+                    <p><strong>性别：</strong>${formData.gender}</p>
+                    <p><strong>语音风格：</strong>${formData.voiceStyle}</p>
+                    <p><strong>喜好：</strong>${formData.likes || '未填写'}</p>
+                    <p><strong>厌恶：</strong>${formData.dislikes || '未填写'}</p>
+                    <p><strong>背景信息：</strong>${formData.background || '未填写'}</p>
+                    <p><strong>背景信息字符数：</strong>${formData.background.length} 字符（无限制）</p>
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        });
+    </script>
+</body>
+</html>

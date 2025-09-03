@@ -6,8 +6,8 @@ interface Character {
   name: string;
   gender: 'male' | 'female' | 'other';
   avatar?: string;
-  likes: string[];
-  dislikes: string[];
+  likes: string;
+  dislikes: string;
   background: string;
   personality?: string;
   voiceStyle: 'cute' | 'serious' | 'humorous' | 'gentle' | 'energetic';
@@ -94,13 +94,13 @@ class AIService {
     }
 
     // 添加喜好
-    if (character.likes && character.likes.length > 0) {
-      prompts.push(`喜欢的事物：${character.likes.join('、')}`);
+    if (character.likes && character.likes.trim()) {
+      prompts.push(`喜欢的事物：${character.likes.trim()}`);
     }
 
     // 添加厌恶
-    if (character.dislikes && character.dislikes.length > 0) {
-      prompts.push(`不喜欢的事物：${character.dislikes.join('、')}`);
+    if (character.dislikes && character.dislikes.trim()) {
+      prompts.push(`不喜欢的事物：${character.dislikes.trim()}`);
     }
 
     // 添加语音风格指导

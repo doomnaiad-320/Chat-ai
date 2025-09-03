@@ -52,8 +52,8 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({
         name: character.name,
         gender: character.gender,
         avatar: character.avatar,
-        likes: character.likes.join(', '),
-        dislikes: character.dislikes.join(', '),
+        likes: character.likes,
+        dislikes: character.dislikes,
         background: character.background,
         voiceStyle: character.voiceStyle,
       });
@@ -71,16 +71,6 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({
       newErrors.name = '角色名称不能为空';
     } else if (formData.name.length > 20) {
       newErrors.name = '角色名称不能超过20个字符';
-    }
-
-    if (!formData.background.trim()) {
-      newErrors.background = '背景信息不能为空';
-    } else if (formData.background.length > 500) {
-      newErrors.background = '背景信息不能超过500个字符';
-    }
-
-    if (!formData.likes.trim()) {
-      newErrors.likes = '喜好不能为空';
     }
 
     setErrors(newErrors);
@@ -112,11 +102,9 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({
     }
 
     try {
-      // 将字符串转换为数组
+      // 直接使用字符串数据
       const characterData = {
         ...formData,
-        likes: formData.likes.split(',').map(item => item.trim()).filter(item => item),
-        dislikes: formData.dislikes.split(',').map(item => item.trim()).filter(item => item),
       };
 
       let savedCharacter: Character;
@@ -234,8 +222,7 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.8)',
                     borderColor: errors.name ? '#EF4444' : '#E8EFFF',
-                    color: '#6B7280',
-                    focusRingColor: '#D1E7FE'
+                    color: '#6B7280'
                   }}
                   placeholder="输入角色名称"
                   maxLength={20}
@@ -310,19 +297,18 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({
               {/* 喜好 */}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
-                  喜好 *
+                  喜好
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={formData.likes}
                   onChange={(e) => setFormData(prev => ({ ...prev, likes: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-2xl border transition-all duration-200 focus:outline-none focus:ring-2"
+                  className="w-full px-4 py-3 rounded-2xl border min-h-[80px] resize-y transition-all duration-200 focus:outline-none focus:ring-2"
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.8)',
                     borderColor: '#E8EFFF',
                     color: '#6B7280'
                   }}
-                  placeholder="请输入喜好，多个喜好用逗号分隔"
+                  placeholder="描述角色的喜好，支持任何文字形式..."
                 />
                 {errors.likes && (
                   <p className="text-xs mt-1" style={{ color: '#EF4444' }}>{errors.likes}</p>
@@ -334,45 +320,38 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({
                 <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
                   厌恶
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={formData.dislikes}
                   onChange={(e) => setFormData(prev => ({ ...prev, dislikes: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-2xl border transition-all duration-200 focus:outline-none focus:ring-2"
+                  className="w-full px-4 py-3 rounded-2xl border min-h-[80px] resize-y transition-all duration-200 focus:outline-none focus:ring-2"
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.8)',
                     borderColor: '#E8EFFF',
                     color: '#6B7280'
                   }}
-                  placeholder="请输入厌恶的事物，多个用逗号分隔"
+                  placeholder="描述角色厌恶的事物，支持任何文字形式..."
                 />
               </div>
 
               {/* 背景信息 */}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
-                  背景信息 *
+                  背景信息
                 </label>
                 <textarea
                   value={formData.background}
                   onChange={(e) => setFormData(prev => ({ ...prev, background: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-2xl border min-h-[120px] resize-none transition-all duration-200 focus:outline-none focus:ring-2"
+                  className="w-full px-4 py-3 rounded-2xl border min-h-[120px] resize-y transition-all duration-200 focus:outline-none focus:ring-2"
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.8)',
                     borderColor: errors.background ? '#EF4444' : '#E8EFFF',
                     color: '#6B7280'
                   }}
-                  placeholder="描述角色的背景故事、性格特点、说话风格等..."
-                  maxLength={500}
+                  placeholder="描述角色的背景故事、性格特点、说话风格等，支持任何长度的自述..."
                 />
-                <div className="flex justify-between items-center mt-2">
-                  {errors.background && (
-                    <p className="text-xs" style={{ color: '#EF4444' }}>{errors.background}</p>
-                  )}
-                  <p className="text-xs ml-auto" style={{ color: '#9CA3AF' }}>
-                    {formData.background.length}/500
-                  </p>
-                </div>
+                {errors.background && (
+                  <p className="text-xs mt-2" style={{ color: '#EF4444' }}>{errors.background}</p>
+                )}
               </div>
 
               {/* 操作按钮 */}

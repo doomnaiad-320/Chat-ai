@@ -33,7 +33,7 @@ export const buildSystemPrompt = (character: Character, globalPrompts?: GlobalPr
     other: '其他'
   };
 
-  const characterPrompt = `你现在是${character.name}，性别${genderMap[character.gender]}，喜欢${character.likes.join('、')}，讨厌${character.dislikes.join('、')}。
+  const characterPrompt = `你现在是${character.name}，性别${genderMap[character.gender]}，喜欢${character.likes}，讨厌${character.dislikes}。
 
 背景故事：${character.background}
 

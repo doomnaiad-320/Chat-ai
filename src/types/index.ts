@@ -4,8 +4,8 @@ export interface Character {
   name: string;
   gender: 'male' | 'female' | 'other';
   avatar?: string;
-  likes: string[];
-  dislikes: string[];
+  likes: string;
+  dislikes: string;
   background: string;
   voiceStyle: 'cute' | 'serious' | 'humorous' | 'gentle' | 'energetic';
   createdAt: Date;

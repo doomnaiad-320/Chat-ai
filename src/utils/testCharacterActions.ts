@@ -7,8 +7,8 @@ export const createTestCharacter = (): Omit<Character, 'id' | 'createdAt' | 'upd
   name: '测试角色',
   gender: 'female',
   avatar: '',
-  likes: ['聊天', '音乐', '电影'],
-  dislikes: ['噪音', '争吵'],
+  likes: '聊天、音乐、电影。喜欢和朋友们一起度过愉快的时光。',
+  dislikes: '噪音、争吵。不喜欢吵闹的环境。',
   background: '这是一个用于测试删除功能的角色',
   voiceStyle: 'cute'
 });

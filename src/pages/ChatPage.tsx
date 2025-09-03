@@ -15,6 +15,7 @@ export const ChatPage: React.FC = () => {
     isSending,
     handleSendMessage,
     cancelSending,
+    testVercelAI,
     isDisplayingSequence,
     typingCharacter
   } = useChat();
@@ -138,27 +139,51 @@ export const ChatPage: React.FC = () => {
               前往通讯录选择一个可爱的AI角色开始对话吧！✨
             </p>
 
-            <motion.button
-              className="font-medium py-4 px-8 rounded-2xl transform hover:scale-105 transition-all duration-300"
-              style={{
-                backgroundColor: '#D1E7FE',
-                color: '#4A90E2',
-                boxShadow: '0 4px 12px rgba(209, 231, 254, 0.3)'
-              }}
-              onClick={() => setCurrentTab('contacts')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#C1D7EE';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(209, 231, 254, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#D1E7FE';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(209, 231, 254, 0.3)';
-              }}
-            >
-              选择角色 🌸
-            </motion.button>
+            <div className="space-y-4">
+              <motion.button
+                className="font-medium py-4 px-8 rounded-2xl transform hover:scale-105 transition-all duration-300"
+                style={{
+                  backgroundColor: '#D1E7FE',
+                  color: '#4A90E2',
+                  boxShadow: '0 4px 12px rgba(209, 231, 254, 0.3)'
+                }}
+                onClick={() => setCurrentTab('contacts')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#C1D7EE';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(209, 231, 254, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#D1E7FE';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(209, 231, 254, 0.3)';
+                }}
+              >
+                选择角色 🌸
+              </motion.button>
+
+              <motion.button
+                className="font-medium py-3 px-6 rounded-2xl transform hover:scale-105 transition-all duration-300"
+                style={{
+                  backgroundColor: '#F3D9FF',
+                  color: '#8B5CF6',
+                  boxShadow: '0 4px 12px rgba(243, 217, 255, 0.3)'
+                }}
+                onClick={() => testVercelAI('Hello, this is a test message')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#E3C9FF';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(243, 217, 255, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#F3D9FF';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(243, 217, 255, 0.3)';
+                }}
+              >
+                🧪 测试 Vercel AI
+              </motion.button>
+            </div>
           </motion.div>
         </div>
       </div>

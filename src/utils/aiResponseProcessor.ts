@@ -6,6 +6,8 @@ import {
   getRandomEmoji
 } from '../config/globalPrompts';
 import { recordAIViolation, type ViolationType } from './aiComplianceMonitor';
+import { detectRepetition, type SimilarityResult, DEFAULT_SIMILARITY_CONFIG } from './similarityDetector';
+import { rewriteResponse, intelligentRewrite, DEFAULT_REWRITE_CONFIG } from './responseRewriter';
 
 // 回复长度控制配置
 interface LengthControlConfig {
@@ -19,6 +21,7 @@ interface LengthControlConfig {
 interface ViolationStats {
   lengthViolations: number;
   sentenceViolations: number;
+  repetitionViolations: number;
   totalViolations: number;
 }
 
@@ -26,6 +29,7 @@ export class AIResponseProcessor {
   private styleConfig: AIStyleConfig;
   private lengthConfig: LengthControlConfig;
   private violationStats: ViolationStats;
+  private recentResponses: string[] = []; // 存储最近的AI回复用于重复检测
 
   constructor(styleConfig: AIStyleConfig) {
     this.styleConfig = styleConfig;
@@ -38,6 +42,7 @@ export class AIResponseProcessor {
     this.violationStats = {
       lengthViolations: 0,
       sentenceViolations: 0,
+      repetitionViolations: 0,
       totalViolations: 0
     };
   }
@@ -47,31 +52,47 @@ export class AIResponseProcessor {
     const originalResponse = response.trim();
     let processedResponse = originalResponse;
 
-    // 1. 【核心】严格的长度和句子数量控制
-    processedResponse = this.enforceLengthLimit(processedResponse);
+    // 1. 【新增】检查是否为拆分格式回复
+    if (this.hasSplitFormat(processedResponse)) {
+      console.log('🔄 检测到拆分格式回复，跳过长度控制');
+      // 对于拆分格式，只做基本清理，不进行长度限制
+      processedResponse = this.cleanSplitFormatResponse(processedResponse);
+    } else {
+      // 2. 【核心】严格的长度和句子数量控制（仅对普通回复）
+      processedResponse = this.enforceLengthLimit(processedResponse);
 
-    // 2. 验证是否为普通回复
-    if (!this.isNormalResponse(processedResponse)) {
-      processedResponse = this.forceNormalResponse(processedResponse);
+      // 3. 验证是否为普通回复
+      if (!this.isNormalResponse(processedResponse)) {
+        processedResponse = this.forceNormalResponse(processedResponse);
+      }
+
+      // 4. 添加语气词（在长度限制内）
+      if (this.styleConfig.useToneWords) {
+        processedResponse = this.addToneWords(processedResponse, character.voiceStyle);
+      }
+
+      // 5. 添加表情符号（在长度限制内）
+      if (this.styleConfig.useEmoji) {
+        processedResponse = this.addEmojis(processedResponse, character.voiceStyle);
+      }
+
+      // 6. 最终长度校验
+      processedResponse = this.finalLengthCheck(processedResponse);
     }
 
-    // 3. 添加语气词（在长度限制内）
-    if (this.styleConfig.useToneWords) {
-      processedResponse = this.addToneWords(processedResponse, character.voiceStyle);
+    // 7. 【新增】重复检测和自动改写
+    const repetitionResult = this.checkAndHandleRepetition(processedResponse);
+    if (repetitionResult.wasRewritten) {
+      processedResponse = repetitionResult.rewrittenText;
     }
 
-    // 4. 添加表情符号（在长度限制内）
-    if (this.styleConfig.useEmoji) {
-      processedResponse = this.addEmojis(processedResponse, character.voiceStyle);
-    }
+    // 8. 记录这次回复到历史记录
+    this.addToRecentResponses(processedResponse);
 
-    // 5. 最终长度校验
-    processedResponse = this.finalLengthCheck(processedResponse);
-
-    // 6. 记录违规情况
-    if (processedResponse !== originalResponse) {
+    // 9. 记录违规情况
+    if (processedResponse !== originalResponse || repetitionResult.wasRewritten) {
       // 异步记录违规，不阻塞回复处理
-      this.recordViolation(originalResponse, processedResponse).catch(error => {
+      this.recordViolation(originalResponse, processedResponse, repetitionResult.similarityResult).catch(error => {
         console.error('记录AI违规失败:', error);
       });
     }
@@ -155,6 +176,106 @@ export class AIResponseProcessor {
     return text.split(/[.!?。！？]/).filter(s => s.trim().length > 0);
   }
 
+  // 【新增】重复检测和处理
+  private checkAndHandleRepetition(response: string): {
+    wasRewritten: boolean;
+    rewrittenText: string;
+    similarityResult: SimilarityResult;
+  } {
+    // 检测是否与最近的回复重复
+    const similarityResult = detectRepetition(
+      response,
+      this.recentResponses,
+      DEFAULT_SIMILARITY_CONFIG
+    );
+
+    if (similarityResult.isRepetitive) {
+      console.log(`🔄 检测到重复回复 (相似度: ${similarityResult.similarity}):`, response);
+      console.log(`📝 匹配的历史回复:`, similarityResult.matchedText);
+
+      // 使用智能改写
+      const rewrittenText = intelligentRewrite(
+        response,
+        this.recentResponses,
+        DEFAULT_REWRITE_CONFIG
+      );
+
+      console.log(`✨ 自动改写结果:`, rewrittenText);
+
+      return {
+        wasRewritten: true,
+        rewrittenText,
+        similarityResult
+      };
+    }
+
+    return {
+      wasRewritten: false,
+      rewrittenText: response,
+      similarityResult
+    };
+  }
+
+  // 【新增】添加回复到最近历史记录
+  private addToRecentResponses(response: string): void {
+    this.recentResponses.push(response);
+
+    // 只保留最近10条回复
+    if (this.recentResponses.length > 10) {
+      this.recentResponses = this.recentResponses.slice(-10);
+    }
+  }
+
+  // 【新增】设置历史回复（用于初始化）
+  setRecentResponses(responses: string[]): void {
+    this.recentResponses = responses.slice(-10); // 只保留最近10条
+  }
+
+  // 【新增】获取最近回复
+  getRecentResponses(): string[] {
+    return [...this.recentResponses];
+  }
+
+  // 【新增】清空历史回复
+  clearRecentResponses(): void {
+    this.recentResponses = [];
+  }
+
+  // 【新增】检查是否为拆分格式回复
+  private hasSplitFormat(response: string): boolean {
+    // 检查是否包含拆分格式的标识符
+    const splitPatterns = [
+      /\[[^\]]+\|[^\]]+\]/,  // [角色名|消息内容]
+      /\{[^}]+\|[^}]+\}/,    // {角色名|撤回内容}
+      /<[^>]+\|[^>]+>/,      // <角色名|表情>
+      /【心声\|[^|]+\|[^】]+】/, // 【心声|角色名|内心想法】
+      /「随笔\|[^|]+\|[^」]+」/  // 「随笔|角色名|随笔内容」
+    ];
+
+    return splitPatterns.some(pattern => pattern.test(response));
+  }
+
+  // 【新增】清理拆分格式回复
+  private cleanSplitFormatResponse(response: string): string {
+    // 对拆分格式回复进行基本清理，但保持格式完整
+    let cleaned = response
+      // 移除多余的空行，但保留必要的换行
+      .replace(/\n\s*\n\s*\n/g, '\n\n')
+      // 移除行首尾多余空格
+      .replace(/^\s+|\s+$/gm, '')
+      // 确保每个格式块之间有适当的换行
+      .replace(/(\]|\}|>|】|」)\s*(\[|\{|<|【|「)/g, '$1\n$2');
+
+    console.log('🧹 拆分格式回复清理完成:', {
+      original: response.substring(0, 100) + '...',
+      cleaned: cleaned.substring(0, 100) + '...',
+      originalLength: response.length,
+      cleanedLength: cleaned.length
+    });
+
+    return cleaned;
+  }
+
   // 最终长度校验
   private finalLengthCheck(response: string): string {
     if (response.length > this.lengthConfig.maxCharacters) {
@@ -164,7 +285,11 @@ export class AIResponseProcessor {
   }
 
   // 记录违规情况并上报到合规监控器
-  private async recordViolation(original: string, processed: string): Promise<void> {
+  private async recordViolation(
+    original: string,
+    processed: string,
+    similarityResult?: SimilarityResult
+  ): Promise<void> {
     const violations: ViolationType[] = [];
 
     // 检查长度违规
@@ -180,8 +305,9 @@ export class AIResponseProcessor {
       violations.push('sentence_violation');
     }
 
-    // 检查格式违规
-    if (original.includes('\n') || original.includes('：')) {
+    // 检查格式违规（但排除拆分格式的合法换行）
+    const hasSplitFormat = this.hasSplitFormat(original);
+    if (!hasSplitFormat && (original.includes('\n') || original.includes('：'))) {
       violations.push('format_violation');
     }
 
@@ -189,6 +315,14 @@ export class AIResponseProcessor {
     const forbiddenKeywords = ['首先', '第一', '以下', '然后', '接下来', '另外', '此外'];
     if (forbiddenKeywords.some(keyword => original.includes(keyword))) {
       violations.push('keyword_violation');
+    }
+
+    // 【新增】检查重复违规
+    if (similarityResult && similarityResult.isRepetitive) {
+      this.violationStats.repetitionViolations++;
+      violations.push('repetition_violation');
+
+      console.log(`📊 重复违规统计: 相似度=${similarityResult.similarity}, 匹配文本="${similarityResult.matchedText}"`);
     }
 
     this.violationStats.totalViolations++;
@@ -268,6 +402,7 @@ export class AIResponseProcessor {
     this.violationStats = {
       lengthViolations: 0,
       sentenceViolations: 0,
+      repetitionViolations: 0,
       totalViolations: 0
     };
   }
