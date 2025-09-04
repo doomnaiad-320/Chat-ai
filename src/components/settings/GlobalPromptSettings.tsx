@@ -66,9 +66,9 @@ export const GlobalPromptSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* 标题 */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800">AI对话风格设置</h2>
         <div className="text-sm text-gray-500">
           已激活 {activePrompts.length} 个提示词
@@ -76,7 +76,7 @@ export const GlobalPromptSettings: React.FC = () => {
       </div>
 
       {/* AI风格配置 */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">基础风格配置</h3>
         
         <div className="space-y-4">

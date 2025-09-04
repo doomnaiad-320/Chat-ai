@@ -10,7 +10,6 @@ export const AIConfigPanel: React.FC = () => {
     connectionError,
     globalPrompt,
     setConfig,
-    testConnection,
     setGlobalPrompt,
     clearConfig,
   } = useAIStore();
@@ -58,14 +57,7 @@ export const AIConfigPanel: React.FC = () => {
     }
   };
 
-  const handleTest = async () => {
-    const success = await testConnection();
-    if (success) {
-      alert('连接测试成功！');
-    } else {
-      alert(`连接测试失败: ${connectionError}`);
-    }
-  };
+
 
   const handleClear = () => {
     if (confirm('确定要清除所有 AI 配置吗？')) {
@@ -92,27 +84,7 @@ export const AIConfigPanel: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* 状态指示器 */}
-      <div className="flex items-center justify-between p-4 rounded-2xl" 
-           style={{ backgroundColor: isConfigured ? '#E8F5E8' : '#FFF3E0' }}>
-        <div className="flex items-center space-x-3">
-          <div className={`w-3 h-3 rounded-full ${isConfigured ? 'bg-green-500' : 'bg-orange-500'}`} />
-          <span className="font-medium" style={{ color: isConfigured ? '#2D5A2D' : '#B8860B' }}>
-            {isConfigured ? 'AI 服务已配置' : 'AI 服务未配置'}
-          </span>
-        </div>
-        {isConfigured && (
-          <button
-            onClick={handleTest}
-            disabled={isConnecting}
-            className="px-3 py-1 text-sm rounded-lg"
-            style={{ backgroundColor: '#4CAF50', color: 'white' }}
-          >
-            {isConnecting ? '测试中...' : '测试连接'}
-          </button>
-        )}
-      </div>
+    <div>
 
       {/* 预设配置 */}
       <div>

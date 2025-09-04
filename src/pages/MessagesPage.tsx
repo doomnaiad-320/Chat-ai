@@ -5,6 +5,7 @@ import { useChatStore } from '../stores/chatStore';
 import { useCharacterStore } from '../stores/characterStore';
 import { useAppStore } from '../stores/appStore';
 import { useScrollAnimation } from '../hooks/useAnimation';
+import { AvatarEditor } from '../components/character/AvatarEditor';
 
 interface ConversationItemProps {
   conversationId: string;
@@ -75,30 +76,13 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           e.currentTarget.style.boxShadow = '0 2px 8px rgba(232, 239, 255, 0.2)';
         }}
       >
-        {/* 头像 */}
+        {/* 头像 - 可编辑 */}
         <div className="relative">
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-lg"
-            style={{
-              backgroundColor: character.gender === 'female' ? '#F3D9FF' :
-                              character.gender === 'male' ? '#D1E7FE' : '#BAF1E3'
-            }}
-          >
-            {character.avatar ? (
-              <img
-                src={character.avatar}
-                alt={character.name}
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
-              <span style={{
-                color: character.gender === 'female' ? '#8B5CF6' :
-                       character.gender === 'male' ? '#4A90E2' : '#10B981'
-              }}>
-                {character.name.charAt(0)}
-              </span>
-            )}
-          </div>
+          <AvatarEditor
+            character={character}
+            size="medium"
+            showEditButton={true}
+          />
 
           {/* 在线状态指示器 */}
           <div

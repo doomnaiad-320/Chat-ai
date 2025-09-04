@@ -7,6 +7,7 @@ import type { Character } from '../types/index';
 import { useStaggeredAnimation } from '../hooks/useAnimation';
 import { CharacterForm } from '../components/character/CharacterForm';
 import { DeleteConfirmDialog } from '../components/character/DeleteConfirmDialog';
+import { AvatarEditor } from '../components/character/AvatarEditor';
 
 interface CharacterCardProps {
   character: Character;
@@ -76,28 +77,13 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       onClick={handleCardClick}
     >
       <div className="flex items-center">
-        {/* 头像 */}
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-medium mr-3 flex-shrink-0"
-          style={{
-            backgroundColor: character.gender === 'female' ? '#F3D9FF' :
-                            character.gender === 'male' ? '#D1E7FE' : '#BAF1E3'
-          }}
-        >
-          {character.avatar ? (
-            <img
-              src={character.avatar}
-              alt={character.name}
-              className="w-full h-full object-cover rounded-full"
-            />
-          ) : (
-            <span style={{
-              color: character.gender === 'female' ? '#8B5CF6' :
-                     character.gender === 'male' ? '#4A90E2' : '#10B981'
-            }}>
-              {character.name.charAt(0)}
-            </span>
-          )}
+        {/* 头像 - 可编辑 */}
+        <div className="mr-3 flex-shrink-0">
+          <AvatarEditor
+            character={character}
+            size="medium"
+            showEditButton={true}
+          />
         </div>
 
         {/* 信息区域 */}

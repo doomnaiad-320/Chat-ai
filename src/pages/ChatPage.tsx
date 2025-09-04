@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChatBubble } from '../components/chat/ChatBubble';
 import { ChatInput } from '../components/chat/ChatInput';
+import { AvatarEditor } from '../components/character/AvatarEditor';
 import { useChat } from '../hooks/useChat';
 import { useCharacterStore } from '../stores/characterStore';
 import { useAppStore } from '../stores/appStore';
@@ -211,28 +212,11 @@ export const ChatPage: React.FC = () => {
 
           {/* 角色信息 */}
           <div className="flex items-center space-x-3">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
-              style={{
-                backgroundColor: currentCharacter.gender === 'female' ? '#F3D9FF' :
-                                currentCharacter.gender === 'male' ? '#D1E7FE' : '#BAF1E3'
-              }}
-            >
-              {currentCharacter.avatar ? (
-                <img
-                  src={currentCharacter.avatar}
-                  alt={currentCharacter.name}
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                <span style={{
-                  color: currentCharacter.gender === 'female' ? '#8B5CF6' :
-                         currentCharacter.gender === 'male' ? '#4A90E2' : '#10B981'
-                }}>
-                  {currentCharacter.name.charAt(0)}
-                </span>
-              )}
-            </div>
+            <AvatarEditor
+              character={currentCharacter}
+              size="small"
+              showEditButton={true}
+            />
 
             <div>
               <h2 className="font-medium" style={{ color: '#6B7280' }}>{currentCharacter.name}</h2>
