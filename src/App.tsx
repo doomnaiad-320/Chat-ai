@@ -12,6 +12,7 @@ import { ContactsPage } from './pages/ContactsPage';
 import { MessagesPage } from './pages/MessagesPage';
 import { ChatPage } from './pages/ChatPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { DevelopmentPage } from './pages/DevelopmentPage';
 
 // Stores
 import { useAppStore } from './stores/appStore';
@@ -164,6 +165,13 @@ const App: React.FC = () => {
         return <MessagesPage />;
       case 'contacts':
         return <ContactsPage />;
+      case 'more':
+        return (
+          <DevelopmentPage
+            title="喜欢功能"
+            description="💖 更多让您心动的功能即将上线，为您提供更温馨的使用体验！"
+          />
+        );
       case 'settings':
         return <SettingsPage />;
       default:

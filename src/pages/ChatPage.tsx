@@ -295,15 +295,8 @@ export const ChatPage: React.FC = () => {
         ) : (
           <div className="space-y-2 min-h-full">
             {messages.map((message, index) => {
-              console.log('🎨 ChatPage渲染消息:', {
-                index,
-                messageType: message.messageType,
-                content: message.content.substring(0, 30) + '...'
-              });
-
               // 跳过心声消息，它们会附加到普通消息上
               if (message.messageType === 'inner_voice') {
-                console.log('🚫 跳过心声消息:', message.content.substring(0, 30) + '...');
                 return null;
               }
 
@@ -312,7 +305,6 @@ export const ChatPage: React.FC = () => {
               const nextMessage = messages[index + 1];
               if (nextMessage && nextMessage.messageType === 'inner_voice') {
                 innerVoiceText = nextMessage.content;
-                console.log('💭 找到心声消息，附加到当前消息:', innerVoiceText.substring(0, 30) + '...');
               }
 
               return (

@@ -18,7 +18,7 @@ interface AppStore {
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
-  currentTab: 'messages',
+  currentTab: 'messages', // 信息Tab作为默认活跃状态
   isLoading: false,
   notification: null,
 

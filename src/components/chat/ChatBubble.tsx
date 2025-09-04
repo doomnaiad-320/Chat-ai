@@ -19,16 +19,6 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
   const isUser = message.sender === 'user';
   const isInnerVoice = message.messageType === 'inner_voice';
 
-  // 调试信息
-  if (message.messageType) {
-    console.log('🎨 ChatBubble渲染消息:', {
-      messageType: message.messageType,
-      isInnerVoice,
-      content: message.content.substring(0, 30) + '...',
-      hasInnerVoice: !!innerVoiceText
-    });
-  }
-
   // 如果是心声消息，不渲染独立气泡
   if (isInnerVoice) {
     return null;
