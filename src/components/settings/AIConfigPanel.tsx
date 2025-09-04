@@ -84,7 +84,7 @@ export const AIConfigPanel: React.FC = () => {
     const presetConfig = DEFAULT_AI_CONFIGS[preset];
     setFormData(prev => ({
       ...prev,
-      baseURL: presetConfig.baseURL || '',
+      baseURL: 'baseURL' in presetConfig ? presetConfig.baseURL : '',
       model: presetConfig.model,
       temperature: presetConfig.temperature,
       maxTokens: presetConfig.maxTokens,

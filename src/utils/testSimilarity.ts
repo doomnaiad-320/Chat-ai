@@ -5,12 +5,10 @@
 
 import {
   calculateSimilarity,
-  calculateNGramSimilarity,
   detectRepetition,
   batchDetectRepetition,
   getRepetitionStats,
-  preprocessText,
-  DEFAULT_SIMILARITY_CONFIG
+  preprocessText
 } from './similarityDetector';
 
 /**
@@ -336,7 +334,10 @@ export function testSplitFormatProcessing(): void {
   import('./aiResponseProcessor').then(({ AIResponseProcessor }) => {
     const processor = new AIResponseProcessor({
       useToneWords: false,
-      useEmoji: false
+      useEmoji: false,
+      maxSentences: 2,
+      conversationalStyle: true,
+      characterConsistency: true
     });
 
     const testCases = [

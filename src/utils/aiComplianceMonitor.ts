@@ -2,7 +2,7 @@ import { get as idbGet, set as idbSet } from 'idb-keyval';
 import type { GlobalPrompt } from '../types';
 
 // 违规类型
-export type ViolationType = 'length_violation' | 'sentence_violation' | 'format_violation' | 'keyword_violation' | 'repetition_violation';
+export type ViolationType = 'lengthViolations' | 'sentenceViolations' | 'formatViolations' | 'keywordViolations' | 'repetitionViolations';
 
 // 违规统计数据
 export interface ComplianceStats {
@@ -131,16 +131,16 @@ export class AIComplianceMonitor {
     // 根据违规类型添加特定警告
     let specificWarning = '';
     switch (violationType) {
-      case 'length_violation':
+      case 'lengthViolations':
         specificWarning = '\n📏 特别注意：严格控制字符数量！';
         break;
-      case 'sentence_violation':
+      case 'sentenceViolations':
         specificWarning = '\n📝 特别注意：严格控制句子数量！';
         break;
-      case 'format_violation':
+      case 'formatViolations':
         specificWarning = '\n📋 特别注意：禁止使用换行和冒号！';
         break;
-      case 'keyword_violation':
+      case 'keywordViolations':
         specificWarning = '\n🚫 特别注意：禁止使用长篇标志词！';
         break;
     }
@@ -160,6 +160,7 @@ export class AIComplianceMonitor {
       sentenceViolations: 0,
       formatViolations: 0,
       keywordViolations: 0,
+      repetitionViolations: 0,
       totalViolations: 0,
       lastViolationTime: new Date(),
       promptStrengthLevel: 1

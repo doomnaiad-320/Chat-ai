@@ -1,6 +1,6 @@
 import { generateText, streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import type { Character, APIConfig, GlobalPrompt } from '../types';
+import { createOpenAI } from '@ai-sdk/openai';
+import type { Character, GlobalPrompt } from '../types';
 
 export interface VercelAIConfig {
   apiKey: string;
@@ -90,13 +90,12 @@ export class VercelAIService {
       ];
 
       const { text } = await generateText({
-        model: openai(this.config!.model, {
+        model: createOpenAI({
           apiKey: this.config!.apiKey,
           baseURL: this.config!.baseURL,
-        }),
+        })(this.config!.model),
         messages: fullMessages,
         temperature: this.config!.temperature,
-        maxTokens: this.config!.maxTokens,
         abortSignal: signal,
       });
 
@@ -134,13 +133,12 @@ export class VercelAIService {
       ];
 
       const { textStream } = await streamText({
-        model: openai(this.config!.model, {
+        model: createOpenAI({
           apiKey: this.config!.apiKey,
           baseURL: this.config!.baseURL,
-        }),
+        })(this.config!.model),
         messages: fullMessages,
         temperature: this.config!.temperature,
-        maxTokens: this.config!.maxTokens,
         abortSignal: signal,
       });
 
@@ -164,12 +162,11 @@ export class VercelAIService {
 
     try {
       const { text } = await generateText({
-        model: openai(this.config!.model, {
+        model: createOpenAI({
           apiKey: this.config!.apiKey,
           baseURL: this.config!.baseURL,
-        }),
+        })(this.config!.model),
         messages: [{ role: 'user', content: 'Hello' }],
-        maxTokens: 10,
       });
 
       return text.length > 0;

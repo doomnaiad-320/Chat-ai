@@ -1,5 +1,5 @@
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 import { vercelAIService } from '../services/vercelAIService';
 import type { Character, APIConfig, GlobalPrompt } from '../types';
 
@@ -48,13 +48,12 @@ export const sendChatRequestCompatible = async (
 
   try {
     const { text } = await generateText({
-      model: openai(vercelConfig.model, {
+      model: createOpenAI({
         apiKey: vercelConfig.apiKey,
         baseURL: vercelConfig.baseURL,
-      }),
+      })(vercelConfig.model),
       messages: messages,
       temperature: vercelConfig.temperature,
-      maxTokens: vercelConfig.maxTokens,
       abortSignal: signal,
     });
 

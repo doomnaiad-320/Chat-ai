@@ -231,7 +231,7 @@ export const SettingsPage: React.FC = () => {
     setEditingConfig(undefined);
   };
 
-  const handleConfigSave = (config: APIConfig) => {
+  const handleConfigSave = () => {
     // 配置保存后的回调，可以在这里做一些额外处理
     loadSettings(); // 重新加载配置列表
   };
@@ -449,7 +449,7 @@ export const SettingsPage: React.FC = () => {
         config={editingConfig}
         isOpen={isFormOpen}
         onClose={handleFormClose}
-        onSave={handleConfigSave}
+        onSave={() => handleConfigSave()}
       />
 
       {/* 新的API配置模态框 */}

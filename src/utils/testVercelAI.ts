@@ -1,5 +1,5 @@
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 
 // 简单的Vercel AI SDK测试函数
 export const testVercelAIBasic = async (apiKey: string, message: string = 'Hello') => {
@@ -7,13 +7,12 @@ export const testVercelAIBasic = async (apiKey: string, message: string = 'Hello
     console.log('🧪 开始测试Vercel AI SDK...');
     
     const { text } = await generateText({
-      model: openai('gpt-3.5-turbo', {
+      model: createOpenAI({
         apiKey: apiKey,
-      }),
+      })('gpt-3.5-turbo'),
       messages: [
         { role: 'user', content: message }
       ],
-      maxTokens: 50,
       temperature: 0.7,
     });
 
@@ -38,14 +37,13 @@ export const testVercelAIWithConfig = async (config: {
     console.log('配置:', config);
     
     const { text } = await generateText({
-      model: openai(config.model || 'gpt-3.5-turbo', {
+      model: createOpenAI({
         apiKey: config.apiKey,
         baseURL: config.baseURL,
-      }),
+      })(config.model || 'gpt-3.5-turbo'),
       messages: [
         { role: 'user', content: config.message || 'Hello, this is a test' }
       ],
-      maxTokens: 100,
       temperature: 0.7,
     });
 

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Message, Conversation } from '../types/index';
 import { get as idbGet, set as idbSet } from 'idb-keyval';
-import { sendChatRequest, buildSystemPrompt, formatErrorMessage } from '../utils/api';
+import { sendChatRequest, buildSystemPrompt } from '../utils/api';
 import { useSettingsStore } from './settingsStore';
 import { useCharacterStore } from './characterStore';
 
@@ -108,7 +108,7 @@ export const useChatStore = create<ChatStore>()(
 
           // 如果没有当前对话，创建一个新的
           if (!currentConversation || currentConversation.characterId !== characterId) {
-            const conversationId = await get().createConversation(characterId);
+            await get().createConversation(characterId);
             currentConversation = get().currentConversation;
           }
 

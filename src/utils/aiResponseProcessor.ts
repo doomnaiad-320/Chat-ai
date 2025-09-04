@@ -1,13 +1,11 @@
 import type { Character, AIStyleConfig } from '../types';
 import {
-  getToneWordsForVoiceStyle,
-  getEmojisForVoiceStyle,
   getRandomToneWord,
   getRandomEmoji
 } from '../config/globalPrompts';
 import { recordAIViolation, type ViolationType } from './aiComplianceMonitor';
 import { detectRepetition, type SimilarityResult, DEFAULT_SIMILARITY_CONFIG } from './similarityDetector';
-import { rewriteResponse, intelligentRewrite, DEFAULT_REWRITE_CONFIG } from './responseRewriter';
+import { intelligentRewrite, DEFAULT_REWRITE_CONFIG } from './responseRewriter';
 
 // 回复长度控制配置
 interface LengthControlConfig {
@@ -298,32 +296,32 @@ export class AIResponseProcessor {
     // 检查长度违规
     if (original.length > this.lengthConfig.maxCharacters) {
       this.violationStats.lengthViolations++;
-      violations.push('length_violation');
+      violations.push('lengthViolations');
     }
 
     // 检查句子数量违规
     const originalSentences = this.getSentences(original);
     if (originalSentences.length > this.lengthConfig.maxSentences) {
       this.violationStats.sentenceViolations++;
-      violations.push('sentence_violation');
+      violations.push('sentenceViolations');
     }
 
     // 检查格式违规（但排除拆分格式的合法换行）
     const hasSplitFormat = this.hasSplitFormat(original);
     if (!hasSplitFormat && (original.includes('\n') || original.includes('：'))) {
-      violations.push('format_violation');
+      violations.push('formatViolations');
     }
 
     // 检查关键词违规
     const forbiddenKeywords = ['首先', '第一', '以下', '然后', '接下来', '另外', '此外'];
     if (forbiddenKeywords.some(keyword => original.includes(keyword))) {
-      violations.push('keyword_violation');
+      violations.push('keywordViolations');
     }
 
     // 【新增】检查重复违规
     if (similarityResult && similarityResult.isRepetitive) {
       this.violationStats.repetitionViolations++;
-      violations.push('repetition_violation');
+      violations.push('repetitionViolations');
 
       console.log(`📊 重复违规统计: 相似度=${similarityResult.similarity}, 匹配文本="${similarityResult.matchedText}"`);
     }
@@ -372,7 +370,7 @@ export class AIResponseProcessor {
   // 添加表情符号（在长度限制内）
   private addEmojis(text: string, voiceStyle: string): string {
     // 检查是否会超出长度限制
-    const emoji = getRandomEmoji(voiceStyle);
+    const emoji = getRandomEmoji();
     const potentialLength = text.length + emoji.length + 1; // +1 for space
 
     if (potentialLength > this.lengthConfig.maxCharacters) {
