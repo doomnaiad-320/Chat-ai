@@ -74,7 +74,7 @@ export class AIResponseProcessor {
 
       // 5. 添加表情符号（在长度限制内）
       if (this.styleConfig.useEmoji) {
-        processedResponse = this.addEmojis(processedResponse, character.voiceStyle);
+        processedResponse = this.addEmojis(processedResponse);
       }
 
       // 6. 最终长度校验
@@ -368,7 +368,7 @@ export class AIResponseProcessor {
   }
 
   // 添加表情符号（在长度限制内）
-  private addEmojis(text: string, voiceStyle: string): string {
+  private addEmojis(text: string): string {
     // 检查是否会超出长度限制
     const emoji = getRandomEmoji();
     const potentialLength = text.length + emoji.length + 1; // +1 for space
