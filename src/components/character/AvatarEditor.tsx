@@ -31,11 +31,7 @@ export const AvatarEditor: React.FC<AvatarEditorProps> = ({
     large: 'w-16 h-16 text-lg'
   };
 
-  const editButtonSizes = {
-    small: 'w-5 h-5',
-    medium: 'w-6 h-6',
-    large: 'w-7 h-7'
-  };
+
 
   // 处理头像上传
   const handleAvatarUpload = async () => {

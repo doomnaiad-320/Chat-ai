@@ -89,7 +89,7 @@ export const TabBar: React.FC = () => {
         }}
       >
         <div className="flex items-center justify-between w-full">
-          {tabs.map((tab, index) => {
+          {tabs.map((tab, _index) => {
             const isActive = currentTab === tab.id;
             const IconComponent = tab.icon;
 

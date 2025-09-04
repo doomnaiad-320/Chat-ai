@@ -51,6 +51,9 @@ export const DevelopmentPage: React.FC<DevelopmentPageProps> = ({
   };
 
   const floatingVariants = {
+    initial: {
+      y: 0
+    },
     animate: {
       y: [-10, 10, -10],
       transition: {
