@@ -36,16 +36,16 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install
+        run: cd imessage-ai-chat && npm install
       - name: Build
-        run: npm run build
+        run: cd imessage-ai-chat && npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload dist repository
-          path: './dist'
+          path: './imessage-ai-chat/dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

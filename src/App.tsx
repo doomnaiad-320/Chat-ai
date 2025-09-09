@@ -180,7 +180,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <Router>
+    <Router basename="/Chat-ai">
       <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#FAFBFF' }}>
         {/* 全局加载状态 */}
         <AnimatePresence>
