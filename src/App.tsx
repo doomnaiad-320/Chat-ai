@@ -12,6 +12,7 @@ import { ContactsPage } from './pages/ContactsPage';
 import { MessagesPage } from './pages/MessagesPage';
 import { ChatPage } from './pages/ChatPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AIGeneratePage } from './pages/AIGeneratePage';
 import { DevelopmentPage } from './pages/DevelopmentPage';
 
 // Stores
@@ -165,6 +166,8 @@ const App: React.FC = () => {
         return <MessagesPage />;
       case 'contacts':
         return <ContactsPage />;
+      case 'ai':
+        return <AIGeneratePage />;
       case 'more':
         return (
           <DevelopmentPage

@@ -90,7 +90,7 @@ export interface AIStyleConfig {
 }
 
 // 标签页类型
-export type TabType = 'messages' | 'contacts' | 'more' | 'settings';
+export type TabType = 'messages' | 'contacts' | 'ai' | 'more' | 'settings';
 
 // 动画类型
 export type AnimationType = 

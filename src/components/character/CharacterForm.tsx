@@ -4,6 +4,8 @@ import type { Character } from '../../types';
 import { useCharacterStore } from '../../stores/characterStore';
 import { useAppStore } from '../../stores/appStore';
 import { ImageStorage } from '../../utils/storage';
+// 注：按需求暂时注释掉语音风格选择器
+// import { VoiceStyleSelector } from './VoiceStyleSelector';
 
 interface CharacterFormProps {
   character?: Character;
@@ -268,31 +270,17 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({
                 </div>
               </div>
 
-              {/* 语音风格 */}
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
-                  语音风格
-                </label>
-                <select
+              {/*
+                语音风格选择器（已按需求注释掉）
+                - 之前使用 <VoiceStyleSelector/> 组件进行选择
+                - 后续需要恢复时，取消下方注释并导入组件
+
+                <VoiceStyleSelector
                   value={formData.voiceStyle}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    voiceStyle: e.target.value as any
-                  }))}
-                  className="w-full px-4 py-3 rounded-2xl border transition-all duration-200 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    borderColor: '#E8EFFF',
-                    color: '#6B7280'
-                  }}
-                >
-                  <option value="cute">🌸 可爱</option>
-                  <option value="serious">🎯 严肃</option>
-                  <option value="humorous">😄 幽默</option>
-                  <option value="gentle">💕 温柔</option>
-                  <option value="energetic">⚡ 活泼</option>
-                </select>
-              </div>
+                  onChange={(v) => setFormData(prev => ({ ...prev, voiceStyle: v }))}
+                  disabled={loading}
+                />
+              */}
 
               {/* 喜好 */}
               <div>
