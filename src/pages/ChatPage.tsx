@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { AvatarEditor } from '../components/character/AvatarEditor';
 import { ChatBubble } from '../components/chat/ChatBubble';
 import { ChatInput } from '../components/chat/ChatInput';
-import { AvatarEditor } from '../components/character/AvatarEditor';
+import { CharacterActionsMenu } from '../components/character/CharacterActionsMenu';
+import { CharacterForm } from '../components/character/CharacterForm';
 import { useChat } from '../hooks/useChat';
 import { useCharacterStore } from '../stores/characterStore';
 import { useAppStore } from '../stores/appStore';
@@ -28,6 +30,7 @@ export const ChatPage: React.FC = () => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
 
   // 自动滚动到底部
   const scrollToBottom = () => {
@@ -82,6 +85,18 @@ export const ChatPage: React.FC = () => {
       navigate('/');
       setCurrentTab('messages');
     }
+  };
+
+  // 处理编辑角色
+  const handleEditCharacter = (character: Character) => {
+    console.log('📝 处理编辑角色', character.name, '当前状态:', showEditForm);
+    setShowEditForm(true);
+    console.log('📝 设置后状态:', true);
+  };
+
+  // 关闭编辑表单
+  const handleCloseEditForm = () => {
+    setShowEditForm(false);
   };
 
   // 如果没有选择角色，显示提示
@@ -228,20 +243,26 @@ export const ChatPage: React.FC = () => {
           </div>
 
           {/* 更多选项 */}
-          <motion.button
-            className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
-            style={{ backgroundColor: '#F0F4FF', color: '#6B7280' }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E0E4FF'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F0F4FF'}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="1" fill="currentColor"/>
-              <circle cx="19" cy="12" r="1" fill="currentColor"/>
-              <circle cx="5" cy="12" r="1" fill="currentColor"/>
-            </svg>
-          </motion.button>
+          <CharacterActionsMenu
+            character={currentCharacter}
+            onEdit={handleEditCharacter}
+            trigger={
+              <motion.button
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+                style={{ backgroundColor: '#F0F4FF', color: '#6B7280' }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E0E4FF'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F0F4FF'}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="1" fill="currentColor"/>
+                  <circle cx="19" cy="12" r="1" fill="currentColor"/>
+                  <circle cx="5" cy="12" r="1" fill="currentColor"/>
+                </svg>
+              </motion.button>
+            }
+          />
         </div>
       </div>
 
@@ -386,6 +407,13 @@ export const ChatPage: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* 编辑角色表单 */}
+      <CharacterForm
+        character={currentCharacter}
+        isOpen={showEditForm}
+        onClose={handleCloseEditForm}
+      />
     </div>
   );
 };

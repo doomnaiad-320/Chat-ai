@@ -178,6 +178,13 @@
     @apply max-w-md mx-auto bg-white min-h-screen;
   }
 
+  /* 页面内容容器 - 避免被 navbar 和 tabbar 遮挡 */
+  .page-content {
+    /* 用于其他页面的通用样式 */
+    @apply pt-16;
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+
   /* 触摸友好的按钮 */
   .touch-button {
     @apply min-h-[44px] min-w-[44px] flex items-center justify-center;

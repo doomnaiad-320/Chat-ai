@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAIStore, DEFAULT_AI_CONFIGS, COMMON_MODELS } from '../../stores/aiStore';
+import { useAppStore } from '../../stores/appStore';
 
 export const AIConfigPanel: React.FC = () => {
   const {
@@ -13,6 +14,8 @@ export const AIConfigPanel: React.FC = () => {
     setGlobalPrompt,
     clearConfig,
   } = useAIStore();
+  
+  const { showNotification } = useAppStore();
 
   const [formData, setFormData] = useState({
     apiKey: config?.apiKey || '',
@@ -39,7 +42,7 @@ export const AIConfigPanel: React.FC = () => {
 
   const handleSave = async () => {
     if (!formData.apiKey.trim()) {
-      alert('请输入 API 密钥');
+      showNotification('请输入 API 密钥', 'warning');
       return;
     }
 
@@ -53,7 +56,7 @@ export const AIConfigPanel: React.FC = () => {
 
     if (success) {
       setGlobalPrompt(tempGlobalPrompt);
-      alert('配置保存成功！');
+      showNotification('AI 配置保存成功！', 'success');
     }
   };
 
@@ -69,6 +72,8 @@ export const AIConfigPanel: React.FC = () => {
         temperature: DEFAULT_AI_CONFIGS.openai.temperature,
         maxTokens: DEFAULT_AI_CONFIGS.openai.maxTokens,
       });
+      setTempGlobalPrompt('');
+      showNotification('AI 配置已清除', 'success');
     }
   };
 
@@ -84,41 +89,51 @@ export const AIConfigPanel: React.FC = () => {
   };
 
   return (
-    <div>
-
+    <div className="space-y-6">
       {/* 预设配置 */}
-      <div>
-        <h3 className="text-lg font-semibold mb-3" style={{ color: '#1F2937' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="card"
+      >
+        <h3 className="text-lg font-semibold text-text-primary mb-3">
           快速配置
         </h3>
         <div className="grid grid-cols-3 gap-3">
           {Object.entries(DEFAULT_AI_CONFIGS).map(([key, preset]) => (
-            <button
+            <motion.button
               key={key}
               onClick={() => handlePresetSelect(key as keyof typeof DEFAULT_AI_CONFIGS)}
-              className="p-3 rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-colors"
-              style={{ backgroundColor: 'white' }}
+              className="p-3 rounded-xl border border-warm-200 bg-white hover:bg-warm-50 hover:border-primary-300 transition-all duration-200"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <div className="text-sm font-medium" style={{ color: '#1F2937' }}>
+              <div className="text-sm font-medium text-text-primary">
                 {preset.name}
               </div>
-              <div className="text-xs" style={{ color: '#6B7280' }}>
+              <div className="text-xs text-text-muted mt-1">
                 {preset.model}
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* API 配置 */}
-      <div>
-        <h3 className="text-lg font-semibold mb-3" style={{ color: '#1F2937' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="card"
+      >
+        <h3 className="text-lg font-semibold text-text-primary mb-4">
           API 配置
         </h3>
         <div className="space-y-4">
           {/* API 密钥 */}
           <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               API 密钥 *
             </label>
             <div className="relative">
@@ -127,13 +142,12 @@ export const AIConfigPanel: React.FC = () => {
                 value={formData.apiKey}
                 onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
                 placeholder="请输入 API 密钥"
-                className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 focus:border-blue-400 focus:outline-none"
-                style={{ backgroundColor: 'white' }}
+                className="input-field pr-12"
               />
               <button
                 type="button"
                 onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
               >
                 {showApiKey ? '🙈' : '👁️'}
               </button>
@@ -142,7 +156,7 @@ export const AIConfigPanel: React.FC = () => {
 
           {/* Base URL */}
           <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               API 端点 (Base URL) *
             </label>
             <input
@@ -150,24 +164,22 @@ export const AIConfigPanel: React.FC = () => {
               value={formData.baseURL}
               onChange={(e) => setFormData(prev => ({ ...prev, baseURL: e.target.value }))}
               placeholder="https://api.openai.com/v1 或 https://your-api.com/v1"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:outline-none"
-              style={{ backgroundColor: 'white' }}
+              className="input-field"
             />
-            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+            <p className="text-xs text-text-muted mt-1">
               支持 OpenAI 兼容的 API 端点，请求格式: /v1/chat/completions
             </p>
           </div>
 
           {/* 模型选择 */}
           <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               模型
             </label>
             <select
               value={formData.model}
               onChange={(e) => setFormData(prev => ({ ...prev, model: e.target.value }))}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:outline-none"
-              style={{ backgroundColor: 'white' }}
+              className="input-field"
             >
               {COMMON_MODELS.map(model => (
                 <option key={model} value={model}>{model}</option>
@@ -178,7 +190,7 @@ export const AIConfigPanel: React.FC = () => {
           {/* 高级参数 */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Temperature ({formData.temperature})
               </label>
               <input
@@ -190,9 +202,13 @@ export const AIConfigPanel: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, temperature: parseFloat(e.target.value) }))}
                 className="w-full"
               />
+              <div className="flex justify-between text-xs text-text-muted mt-1">
+                <span>保守</span>
+                <span>创意</span>
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 最大 Tokens
               </label>
               <input
@@ -201,17 +217,21 @@ export const AIConfigPanel: React.FC = () => {
                 max="8000"
                 value={formData.maxTokens}
                 onChange={(e) => setFormData(prev => ({ ...prev, maxTokens: parseInt(e.target.value) }))}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:outline-none"
-                style={{ backgroundColor: 'white' }}
+                className="input-field"
               />
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* 全局提示词 */}
-      <div>
-        <h3 className="text-lg font-semibold mb-3" style={{ color: '#1F2937' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="card"
+      >
+        <h3 className="text-lg font-semibold text-text-primary mb-3">
           全局提示词
         </h3>
         <textarea
@@ -219,29 +239,39 @@ export const AIConfigPanel: React.FC = () => {
           onChange={(e) => setTempGlobalPrompt(e.target.value)}
           placeholder="输入全局提示词，将应用于所有角色对话..."
           rows={4}
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:outline-none resize-none"
-          style={{ backgroundColor: 'white' }}
+          className="input-field resize-none"
         />
-      </div>
+        <p className="text-xs text-text-muted mt-2">
+          全局提示词将被添加到每个角色的系统提示中，用于统一控制AI的回复风格
+        </p>
+      </motion.div>
 
       {/* 错误信息 */}
       {connectionError && (
-        <div className="p-4 rounded-xl" style={{ backgroundColor: '#FEE2E2' }}>
-          <p className="text-sm" style={{ color: '#DC2626' }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="card bg-red-50 border-red-200"
+        >
+          <p className="text-sm text-red-600">
             {connectionError}
           </p>
-        </div>
+        </motion.div>
       )}
 
       {/* 操作按钮 */}
-      <div className="flex space-x-3">
+      <motion.div 
+        className="flex space-x-3"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleSave}
           disabled={isConnecting}
-          className="flex-1 py-3 rounded-xl font-medium"
-          style={{ backgroundColor: '#3B82F6', color: 'white' }}
+          className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isConnecting ? '保存中...' : '保存配置'}
         </motion.button>
@@ -251,13 +281,12 @@ export const AIConfigPanel: React.FC = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleClear}
-            className="px-6 py-3 rounded-xl font-medium border border-gray-300"
-            style={{ backgroundColor: 'white', color: '#6B7280' }}
+            className="btn-secondary"
           >
             清除配置
           </motion.button>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

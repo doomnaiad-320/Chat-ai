@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAppStore } from '../stores/appStore';
 import { APIConfigCard } from '../components/settings/APIConfigCard';
+// import { GlobalPromptSettings } from '../components/settings/GlobalPromptSettings';
 
 interface SettingItemProps {
   title: string;
@@ -84,21 +85,22 @@ export const SettingsPage: React.FC = () => {
 
 
   return (
-    <div className="flex flex-col h-full bg-warm-50">
+    <div className="h-screen bg-warm-50 overflow-hidden">
       {/* 顶部导航栏 */}
       <div className="navbar">
         <h1 className="text-lg font-semibold text-text-primary">设置</h1>
       </div>
 
       {/* 设置内容 */}
-      <div className="flex-1 overflow-y-auto pt-16 pb-32 px-4">
-        {/* 应用设置 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <h2 className="text-lg font-semibold text-text-primary mb-4">应用设置</h2>
+      <div className="h-full overflow-y-auto">
+        <div className="px-4 pt-20" style={{ paddingBottom: 'calc(8rem + env(safe-area-inset-bottom))' }}>
+          {/* 应用设置 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <h2 className="text-lg font-semibold text-text-primary mb-4">应用设置</h2>
           
           <SettingItem title="主题模式" description="选择应用的外观主题">
             <select
@@ -149,18 +151,19 @@ export const SettingsPage: React.FC = () => {
           </SettingItem>
         </motion.div>
 
-        {/* AI 配置 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-8"
-        >
+        {/* AI 配置部分 */}
+        <div className="mt-8">
           <h2 className="text-lg font-semibold text-text-primary mb-4">AI 配置</h2>
           
           {/* API配置展示卡片 */}
-          <APIConfigCard className="mb-4" />
-        </motion.div>
+          <APIConfigCard />
+        </div>
+
+          {/* AI 对话风格设置部分 */}
+          {/* <div className="mt-8">
+            <GlobalPromptSettings />
+          </div> */}
+        </div>
       </div>
     </div>
   );

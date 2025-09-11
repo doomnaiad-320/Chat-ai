@@ -66,29 +66,34 @@ export const GlobalPromptSettings: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* 标题 */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-800">AI对话风格设置</h2>
-        <div className="text-sm text-gray-500">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-text-primary">AI对话风格设置</h2>
+        <div className="text-sm text-text-muted">
           已激活 {activePrompts.length} 个提示词
         </div>
       </div>
 
       {/* AI风格配置 */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">基础风格配置</h3>
+      <motion.div 
+        className="card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <h3 className="text-lg font-semibold text-text-primary mb-4">基础风格配置</h3>
         
         <div className="space-y-4">
           {/* 使用表情符号 */}
           <div className="flex items-center justify-between">
             <div>
-              <label className="text-sm font-medium text-gray-700">使用表情符号</label>
-              <p className="text-xs text-gray-500">让AI回复更生动有趣</p>
+              <label className="text-sm font-medium text-text-primary">使用表情符号</label>
+              <p className="text-xs text-text-muted">让AI回复更生动有趣</p>
             </div>
             <motion.button
               className={`w-12 h-6 rounded-full transition-colors ${
-                aiStyleConfig.useEmoji ? 'bg-blue-500' : 'bg-gray-300'
+                aiStyleConfig.useEmoji ? 'bg-primary-400' : 'bg-gray-300'
               }`}
               onClick={() => handleStyleConfigChange('useEmoji', !aiStyleConfig.useEmoji)}
               whileTap={{ scale: 0.95 }}
@@ -104,12 +109,12 @@ export const GlobalPromptSettings: React.FC = () => {
           {/* 使用语气词 */}
           <div className="flex items-center justify-between">
             <div>
-              <label className="text-sm font-medium text-gray-700">使用语气词</label>
-              <p className="text-xs text-gray-500">添加"呢"、"呀"、"啦"等语气词</p>
+              <label className="text-sm font-medium text-text-primary">使用语气词</label>
+              <p className="text-xs text-text-muted">添加"呢"、"呀"、"啦"等语气词</p>
             </div>
             <motion.button
               className={`w-12 h-6 rounded-full transition-colors ${
-                aiStyleConfig.useToneWords ? 'bg-blue-500' : 'bg-gray-300'
+                aiStyleConfig.useToneWords ? 'bg-primary-400' : 'bg-gray-300'
               }`}
               onClick={() => handleStyleConfigChange('useToneWords', !aiStyleConfig.useToneWords)}
               whileTap={{ scale: 0.95 }}
@@ -125,12 +130,12 @@ export const GlobalPromptSettings: React.FC = () => {
           {/* 对话式风格 */}
           <div className="flex items-center justify-between">
             <div>
-              <label className="text-sm font-medium text-gray-700">对话式风格</label>
-              <p className="text-xs text-gray-500">模仿真人聊天的自然节奏</p>
+              <label className="text-sm font-medium text-text-primary">对话式风格</label>
+              <p className="text-xs text-text-muted">模仿真人聊天的自然节奏</p>
             </div>
             <motion.button
               className={`w-12 h-6 rounded-full transition-colors ${
-                aiStyleConfig.conversationalStyle ? 'bg-blue-500' : 'bg-gray-300'
+                aiStyleConfig.conversationalStyle ? 'bg-primary-400' : 'bg-gray-300'
               }`}
               onClick={() => handleStyleConfigChange('conversationalStyle', !aiStyleConfig.conversationalStyle)}
               whileTap={{ scale: 0.95 }}
@@ -146,33 +151,38 @@ export const GlobalPromptSettings: React.FC = () => {
           {/* 最大句子数 */}
           <div className="flex items-center justify-between">
             <div>
-              <label className="text-sm font-medium text-gray-700">回复长度</label>
-              <p className="text-xs text-gray-500">每次回复的最大句子数</p>
+              <label className="text-sm font-medium text-text-primary">回复长度</label>
+              <p className="text-xs text-text-muted">每次回复的最大句子数</p>
             </div>
             <div className="flex items-center space-x-2">
               <motion.button
-                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-warm-100 hover:bg-warm-200 flex items-center justify-center transition-colors"
                 onClick={() => handleStyleConfigChange('maxSentences', Math.max(1, aiStyleConfig.maxSentences - 1))}
                 whileTap={{ scale: 0.9 }}
               >
-                <span className="text-gray-600">-</span>
+                <span className="text-text-secondary">-</span>
               </motion.button>
-              <span className="w-8 text-center font-medium">{aiStyleConfig.maxSentences}</span>
+              <span className="w-8 text-center font-medium text-text-primary">{aiStyleConfig.maxSentences}</span>
               <motion.button
-                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-warm-100 hover:bg-warm-200 flex items-center justify-center transition-colors"
                 onClick={() => handleStyleConfigChange('maxSentences', Math.min(5, aiStyleConfig.maxSentences + 1))}
                 whileTap={{ scale: 0.9 }}
               >
-                <span className="text-gray-600">+</span>
+                <span className="text-text-secondary">+</span>
               </motion.button>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* 全局提示词列表 */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">全局提示词</h3>
+      <motion.div 
+        className="card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h3 className="text-lg font-semibold text-text-primary mb-4">全局提示词</h3>
         
         {loading && (
           <div className="text-center py-4">
@@ -182,9 +192,13 @@ export const GlobalPromptSettings: React.FC = () => {
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
+          <motion.div 
+            className="card bg-red-50 border-red-200 mb-4"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <p className="text-sm text-red-600">{error}</p>
+          </motion.div>
         )}
 
         <div className="space-y-3">
@@ -192,21 +206,21 @@ export const GlobalPromptSettings: React.FC = () => {
             <motion.div
               key={prompt.id}
               className={`border rounded-xl p-4 transition-all ${
-                prompt.isActive ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'
+                prompt.isActive ? 'border-primary-200 bg-primary-50' : 'border-warm-200 bg-warm-50'
               }`}
               layout
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
-                    <h4 className="font-medium text-gray-800">{prompt.name}</h4>
+                    <h4 className="font-medium text-text-primary">{prompt.name}</h4>
                     <span
                       className="px-2 py-1 rounded-full text-xs font-medium text-white"
                       style={{ backgroundColor: getPromptTypeColor(prompt.type) }}
                     >
                       {getPromptTypeName(prompt.type)}
                     </span>
-                    <span className="text-xs text-gray-500">优先级: {prompt.priority}</span>
+                    <span className="text-xs text-text-muted">优先级: {prompt.priority}</span>
                   </div>
                   
                   {showDetails === prompt.id && (
@@ -214,7 +228,7 @@ export const GlobalPromptSettings: React.FC = () => {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="text-sm text-gray-600 bg-white rounded-lg p-3 mb-3"
+                      className="text-sm text-text-secondary bg-white rounded-lg p-3 mb-3"
                     >
                       {prompt.content}
                     </motion.div>
@@ -222,7 +236,7 @@ export const GlobalPromptSettings: React.FC = () => {
                   
                   <div className="flex items-center space-x-3">
                     <motion.button
-                      className="text-xs text-blue-600 hover:text-blue-800"
+                      className="text-xs text-primary-600 hover:text-primary-700 transition-colors"
                       onClick={() => setShowDetails(showDetails === prompt.id ? null : prompt.id)}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -233,7 +247,7 @@ export const GlobalPromptSettings: React.FC = () => {
                 
                 <motion.button
                   className={`w-12 h-6 rounded-full transition-colors ${
-                    prompt.isActive ? 'bg-blue-500' : 'bg-gray-300'
+                    prompt.isActive ? 'bg-primary-400' : 'bg-gray-300'
                   }`}
                   onClick={() => handleTogglePrompt(prompt.id, !prompt.isActive)}
                   whileTap={{ scale: 0.95 }}
@@ -250,16 +264,21 @@ export const GlobalPromptSettings: React.FC = () => {
         </div>
 
         {globalPrompts.length === 0 && !loading && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-text-muted">
             <p>暂无全局提示词</p>
             <p className="text-sm mt-1">系统将自动加载内置提示词</p>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* 当前激活的提示词预览 */}
       {activePrompts.length > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
+        <motion.div 
+          className="card bg-green-50 border-green-200"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
           <h3 className="text-lg font-semibold text-green-800 mb-3">当前激活的提示词</h3>
           <div className="space-y-2">
             {activePrompts.map((prompt, index) => (
@@ -273,15 +292,20 @@ export const GlobalPromptSettings: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* AI合规监控面板 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+      <motion.div 
+        className="card bg-blue-50 border-blue-200"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-blue-800">AI回复合规监控</h3>
           <motion.button
-            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition-colors"
+            className="px-3 py-1 bg-primary-100 text-primary-700 rounded-lg text-sm hover:bg-primary-200 transition-colors"
             onClick={async () => {
               await complianceMonitor.resetStats();
               setComplianceStats(getComplianceStats());
@@ -341,10 +365,10 @@ export const GlobalPromptSettings: React.FC = () => {
           <div className="mt-4 text-center py-4">
             <div className="text-4xl mb-2">✅</div>
             <div className="text-sm text-green-600 font-medium">AI回复完全合规</div>
-            <div className="text-xs text-gray-500">暂无违规记录</div>
+            <div className="text-xs text-text-muted">暂无违规记录</div>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };
